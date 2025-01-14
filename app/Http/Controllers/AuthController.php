@@ -7,6 +7,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\JsonResponse;
+use Tymon\JWTAuth\Facades\JWTAuth;
+use Tymon\JWTAuth\Exceptions\JWTException;
+use Illuminate\Support\Facades\Auth;
 
 class AuthController extends Controller
 {
@@ -28,13 +31,15 @@ class AuthController extends Controller
             return response()->json($validator->errors(), 422);
         }
 
-        User::create([
+        $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
         ]);
 
-        return response()->json(['message' => 'Usuário cadastrado com sucesso!'], 201);
+        $token = JWTAuth::fromUser($user);
+
+        return response()->json(compact('user','token'), 201);
     }
 
     /**
@@ -45,43 +50,40 @@ class AuthController extends Controller
      */
     public function login(Request $request): JsonResponse
     {
-        try {
+        $validator = Validator::make($request->all(), [
+            'email' => 'required|email',
+            'password' => 'required|string',
+        ]);
 
-            $validator = Validator::make($request->all(), [
-                'email' => 'required|string|email',
-                'password' => 'required|string',
-            ]);
-
-            if ($validator->fails()) {
-                return response()->json($validator->errors(), 422);
-            }
-
-            $user = User::where('email', $request->email)->first();
-
-            if (!$user || !Hash::check($request->password, $user->password)) {
-                return response()->json(['message' => 'Não autorizado'], 401);
-            }
-
-            $token = $user->createToken('sales-api')->plainTextToken;
-
-            return response()->json(['token' => $token]);
-        } catch (\Exception $e) {
-            return response()->json(['message' => $e->getMessage()], 500);
+        if ($validator->fails()) {
+            return response()->json($validator->errors(), 422);
         }
+
+        $credentials = $request->only('email', 'password');
+
+        if (Auth::attempt($credentials)) {
+            $user = Auth::user();
+            $token = JWTAuth::claims(['role' => $user->role])->fromUser($user);
+            return response()->json(['token' => $token]);
+        }
+
+        return response()->json(['message' => 'Não autorizado'], 401);
     }
 
     /**
      * Deslogar no usuário
      *
-     * @param Request $request
      * @return JsonResponse
      */
-    public function logout(Request $request): JsonResponse
+    public function logout(): JsonResponse
     {
-        $request->user()->tokens->each(function ($token) {
-            $token->delete();
-        });
+        try {
+            $token = JWTAuth::parseToken();
+            $token->invalidate(true);
 
-        return response()->json(['message' => 'Usuário deslogado com sucesso']);
+            return response()->json(['message' => 'Usuário deslogado com sucesso'], 200);
+        } catch (JWTException $e) {
+            return response()->json(['error' => 'Erro inesperado'], 500);
+        }
     }
 }
