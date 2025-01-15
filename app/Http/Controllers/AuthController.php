@@ -86,4 +86,22 @@ class AuthController extends Controller
             return response()->json(['error' => 'Erro inesperado'], 500);
         }
     }
+
+    /**
+     * Pegar usuário logado
+     *
+     * @return JsonResponse
+     */
+    public function getUser(): JsonResponse
+    {
+        try {
+            if (! $user = JWTAuth::parseToken()->authenticate()) {
+                return response()->json(['error' => 'Usuário não encontrado'], 404);
+            }
+        } catch (JWTException $e) {
+            return response()->json(['error' => 'Token inválido'], 400);
+        }
+
+        return response()->json(compact('user'));
+    }
 }
