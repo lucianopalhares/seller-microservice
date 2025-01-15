@@ -33,6 +33,10 @@ class SellerController extends Controller
      */
     public function index(): JsonResponse
     {
-        return response()->json(Seller::all());
+        try {
+            return response()->json(Seller::all());
+        } catch (\Exception $e) {
+            return response()->json($e->getMessage(), 500);
+        }
     }
 }

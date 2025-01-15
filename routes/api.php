@@ -1,16 +1,26 @@
 <?php
 
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SellerController;
 use App\Http\Controllers\SaleController;
+use App\Http\Controllers\AuthController;
 
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
+Route::post('register', [AuthController::class, 'register']);
+Route::post('login', [AuthController::class, 'login']);
 
-Route::post('sellers', [SellerController::class, 'store']);
-Route::get('sellers', [SellerController::class, 'index']);
+Route::middleware('auth:api')->group(function () {
+    Route::get('user', [AuthController::class, 'getUser']);
+    Route::post('logout', [AuthController::class, 'logout']);
 
-Route::post('sales', [SaleController::class, 'store']);
-Route::get('sales/{id}', [SaleController::class, 'salesBySeller']);
+    Route::prefix('sellers')->group(function () {
+        Route::post('/', [SellerController::class, 'store']);
+        Route::get('/', [SellerController::class, 'index']);
+    });
+
+    Route::prefix('sales')->group(function () {
+        Route::post('/', [SaleController::class, 'store']);
+        Route::get('{id}', [SaleController::class, 'salesBySeller']);
+    });
+});
+
+
