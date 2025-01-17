@@ -4,7 +4,7 @@ namespace App\Application\Sellers;
 
 use App\Application\Sellers\Services\SellerService;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
+use App\Http\Requests\SellerRequest;
 use Illuminate\Http\JsonResponse;
 use Exception;
 use App\Http\Resources\SellerResource;
@@ -24,30 +24,22 @@ class SellersController extends Controller
     }
 
     /**
-     * Create a new seller.
+     * Criar novo vendedor
      *
-     * @param Request $request
+     * @param SellerRequest $request
      * @return JsonResponse
      * @throws Exception
      */
-    public function createSeller(Request $request): JsonResponse
+    public function createSeller(SellerRequest $request): JsonResponse
     {
         try {
-            // Validando dados de entrada
-            $request->validate([
-                'name' => 'required|string|max:255',
-                'email' => 'required|email|unique:sellers,email',
-            ]);
-
             $name = $request->input('name');
             $email = $request->input('email');
 
-            // Chamada ao serviço para criar o vendedor
             $seller = $this->sellerService->createSeller($name, $email);
 
             return response()->json(new SellerResource($seller), 201);
         } catch (Exception $e) {
-            // Tratando exceções e retornando um erro adequado
             return response()->json([
                 'error' => 'Unable to create seller',
                 'message' => $e->getMessage(),
@@ -56,7 +48,7 @@ class SellersController extends Controller
     }
 
     /**
-     * Get all sellers.
+     * Pegar todos vendedores
      *
      * @return JsonResponse
      */

@@ -22,7 +22,7 @@ return Application::configure(basePath: dirname(__DIR__))
                     [
                         'errors' => [
                             'status' => 401,
-                            'message' => 'Não autenticado',
+                            'message' => $e->getMessage(),
                         ]
                     ], 401
                 );
