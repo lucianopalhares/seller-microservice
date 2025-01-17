@@ -1,63 +1,85 @@
 <?php
+
 namespace App\Application\Sales;
 
 use App\Application\Sales\Services\SaleService;
-use App\Http\Controllers\Controller;
+use App\Enums\StatusCodeEnum;
+use App\Exceptions\CustomException;
+use App\Application\BaseController;
 use App\Http\Requests\SaleRequest;
 use App\Http\Resources\SaleResource;
 use Illuminate\Http\JsonResponse;
-use Exception;
 
-class SalesController extends Controller
+/**
+ * Controlador responsável por gerenciar vendas.
+ */
+class SalesController extends BaseController
 {
+    /**
+     * Serviço de vendas.
+     *
+     * @var SaleService
+     */
     private SaleService $saleService;
 
+    /**
+     * Construtor do controlador.
+     *
+     * @param SaleService $saleService
+     */
     public function __construct(SaleService $saleService)
     {
         $this->saleService = $saleService;
     }
 
     /**
-     * Criar nova venda
+     * Criar uma nova venda.
      *
      * @param SaleRequest $request
      * @return JsonResponse
-     * @throws Exception
+     * @throws CustomException
      */
-    public function createSale(SaleRequest $request)
+    public function createSale(SaleRequest $request): JsonResponse
     {
         try {
             $sellerId = $request->input('seller_id');
             $saleValue = $request->input('sale_value');
 
+            if (!$sellerId || !$saleValue) {
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST);
+            }
+
             $sale = $this->saleService->createSale($sellerId, $saleValue);
 
-            return response()->json(new SaleResource($sale), 201);
-        } catch (Exception $e) {
-            return response()->json([
-                'error' => 'Unable to create seller',
-                'message' => $e->getMessage(),
-            ], 500);
+            return $this->responseJson(StatusCodeEnum::CREATED, new SaleResource($sale));
+        } catch (CustomException $e) {
+            return $this->responseJsonError($e);
         }
     }
 
     /**
-     * Pegar todas as vendas de um vendedor especifico.
+     * Obter todas as vendas de um vendedor específico.
      *
      * @param int $sellerId
      * @return JsonResponse
+     * @throws CustomException
      */
-    public function getSalesBySeller($sellerId): JsonResponse
+    public function getSalesBySeller(int $sellerId): JsonResponse
     {
         try {
+            if (!$sellerId) {
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST);
+            }
+
             $sales = $this->saleService->getSalesBySeller($sellerId);
 
-            return response()->json(SaleResource::collection($sales));
-        } catch (Exception $e) {
-            return response()->json([
-                'error' => 'Erro ao pegar vendas',
-                'message' => $e->getMessage(),
-            ], 500);
+            if (count($sales) === 0) {
+                return $this->responseJson(StatusCodeEnum::NO_CONTENT);
+            }
+
+            return $this->responseJson(StatusCodeEnum::OK, SaleResource::collection($sales));
+        } catch (CustomException $e) {
+            return $this->responseJsonError($e);
         }
     }
 }
