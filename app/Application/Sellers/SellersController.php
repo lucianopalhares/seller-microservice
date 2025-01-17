@@ -9,6 +9,7 @@ use App\Application\BaseController;
 use App\Http\Requests\SellerRequest;
 use Illuminate\Http\JsonResponse;
 use App\Http\Resources\SellerResource;
+use Elastic\Elasticsearch\ClientBuilder;
 
 class SellersController extends BaseController
 {
@@ -50,8 +51,34 @@ class SellersController extends BaseController
      *
      * @return JsonResponse
      */
-    public function getAllSellers(): JsonResponse
+    public function getAllSellers()
     {
+
+        try {
+            $client = ClientBuilder::create()->setHosts([env('ELASTICSEARCH_HOST')])->build();
+
+            $params = [
+                'index' => 'test',
+                'body'  => [
+                    'settings' => [
+                        'number_of_shards' => 1,  // Example of setting index properties
+                    ],
+                    'mappings' => [
+                        'properties' => [
+                            'name' => ['type' => 'text'],
+                            'email' => ['type' => 'text'],
+                        ]
+                    ]
+                ]
+            ];
+
+            $client->indices()->create($params);
+
+            print_r('foi');exit;
+        } catch (\Exception $e) {
+            print_r($e->getMessage());exit;
+        }
+
         try {
             $sellers = $this->sellerService->getAllSellersWithCommission();
 
@@ -70,4 +97,6 @@ class SellersController extends BaseController
             return $this->responseJsonError($e);
         }
     }
+
+
 }

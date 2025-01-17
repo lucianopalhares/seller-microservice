@@ -21,6 +21,8 @@ class SaleEloquentRepository implements SaleRepository
         $sale->setCommission($SaleEloquentModel->sale_commission);
         $sale->setSaleDate($SaleEloquentModel->created_at);
 
+        $SaleEloquentModel->indexToElasticsearch();
+
         return $sale;
     }
 

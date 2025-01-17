@@ -5,6 +5,7 @@ namespace App\Infrastructure\Repositories;
 use App\Domain\Sellers\Seller;
 use App\Domain\Sellers\SellerRepository;
 use App\Infrastructure\Eloquent\SellerEloquentModel;
+use Illuminate\Support\Facades\DB;
 
 class SellerEloquentRepository implements SellerRepository
 {
@@ -17,15 +18,23 @@ class SellerEloquentRepository implements SellerRepository
      */
     public function save(Seller $seller): Seller
     {
-        $eloquentSeller = SellerEloquentModel::find($seller->getId()) ?? new SellerEloquentModel();
-        $eloquentSeller->name = $seller->getName();
-        $eloquentSeller->email = $seller->getEmail();
-        $eloquentSeller->save();
+        try {
+            DB::beginTransaction();
 
-        // Atualiza o ID do vendedor de domínio com o ID gerado pelo Eloquent
-        $seller->setId($eloquentSeller->id);
+            $eloquentSeller = SellerEloquentModel::find($seller->getId()) ?? new SellerEloquentModel();
+            $eloquentSeller->name = $seller->getName();
+            $eloquentSeller->email = $seller->getEmail();
+            $eloquentSeller->save();
 
-        // Retorna o objeto Seller atualizado
+            $eloquentSeller->indexToElasticsearch();
+
+            $seller->setId($eloquentSeller->id);
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+        }
+
         return $seller;
     }
 
