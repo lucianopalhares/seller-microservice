@@ -5,28 +5,28 @@ namespace App\Infrastructure\Repositories;
 use App\Domain\Sales\Sale;
 use App\Domain\Sellers\Seller;
 use App\Domain\Sales\SaleRepository;
-use App\Models\Sale as EloquentSale;
+use App\Infrastructure\Eloquent\SaleEloquentModel;
 
 class SaleEloquentRepository implements SaleRepository
 {
     public function save(Sale $sale): Sale
     {
-        $eloquentSale = new EloquentSale();
-        $eloquentSale->seller_id = $sale->getSeller()->getId();
-        $eloquentSale->sale_value = $sale->getValue();
-        $eloquentSale->sale_commission = $sale->getCommission();
-        $eloquentSale->save();
+        $SaleEloquentModel = new SaleEloquentModel();
+        $SaleEloquentModel->seller_id = $sale->getSeller()->getId();
+        $SaleEloquentModel->sale_value = $sale->getValue();
+        $SaleEloquentModel->sale_commission = $sale->getCommission();
+        $SaleEloquentModel->save();
 
-        $sale->setId($eloquentSale->id);
-        $sale->setCommission($eloquentSale->sale_commission);
-        $sale->setSaleDate($eloquentSale->created_at);
+        $sale->setId($SaleEloquentModel->id);
+        $sale->setCommission($SaleEloquentModel->sale_commission);
+        $sale->setSaleDate($SaleEloquentModel->created_at);
 
         return $sale;
     }
 
     public function findBySeller(int $sellerId): array
     {
-        return EloquentSale::where('seller_id', $sellerId)->get()->map(function ($sale) {
+        return SaleEloquentModel::where('seller_id', $sellerId)->get()->map(function ($sale) {
             $eloquentSeller = $sale->seller;
 
             $seller = new Seller(
@@ -40,7 +40,7 @@ class SaleEloquentRepository implements SaleRepository
 
     public function findAll(): array
     {
-        return EloquentSale::all()->map(function ($sale) {
+        return SaleEloquentModel::all()->map(function ($sale) {
             return new Sale($sale->id, $sale->seller, $sale->sale_value, $sale->sale_commission, $sale->created_at);
         })->toArray();
     }

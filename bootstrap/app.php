@@ -1,9 +1,9 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
-use Illuminate\Http\Request;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -18,14 +18,13 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withExceptions(function (Exceptions $exceptions) {
         $exceptions->render(function (\Exception $e, Request $request) {
             if ($request->is('api/*')) {
-                return response()->json(
-                    [
-                        'errors' => [
-                            'status' => 401,
-                            'message' => $e->getMessage(),
-                        ]
-                    ], 401
-                );
+                return response()->json([
+                    'message' => $e->getMessage(),
+                ], 500);
+            } else {
+                return response()->json([
+                    'message' => $e->getMessage(),
+                ], 500);
             }
         });
     })->create();

@@ -3,17 +3,17 @@
 namespace App\Http\Middleware;
 
 use Closure;
-use Tymon\JWTAuth\Exceptions\JWTException;
-use Tymon\JWTAuth\Facades\JWTAuth;
+use Illuminate\Http\Request;
+use App\Enums\StatusCodeEnum;
 
 class JwtMiddleware
 {
-    public function handle($request, Closure $next)
+    public function handle(Request $request, Closure $next)
     {
-        try {
-            JWTAuth::parseToken();
-        } catch (JWTException $e) {
-            return response()->json(['error' => 'Token inválido1'], 401);
+        if (!auth('api')->check()) {
+            return response()->json([
+                'message' => StatusCodeEnum::UNAUTHORIZED->message(),
+            ], StatusCodeEnum::UNAUTHORIZED->value);
         }
 
         return $next($request);

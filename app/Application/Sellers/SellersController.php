@@ -3,13 +3,14 @@
 namespace App\Application\Sellers;
 
 use App\Application\Sellers\Services\SellerService;
-use App\Http\Controllers\Controller;
+use App\Enums\StatusCodeEnum;
+use App\Exceptions\CustomException;
+use App\Application\BaseController;
 use App\Http\Requests\SellerRequest;
 use Illuminate\Http\JsonResponse;
-use Exception;
 use App\Http\Resources\SellerResource;
 
-class SellersController extends Controller
+class SellersController extends BaseController
 {
     private SellerService $sellerService;
 
@@ -28,7 +29,7 @@ class SellersController extends Controller
      *
      * @param SellerRequest $request
      * @return JsonResponse
-     * @throws Exception
+     * @throws CustomException
      */
     public function createSeller(SellerRequest $request): JsonResponse
     {
@@ -38,17 +39,14 @@ class SellersController extends Controller
 
             $seller = $this->sellerService->createSeller($name, $email);
 
-            return response()->json(new SellerResource($seller), 201);
-        } catch (Exception $e) {
-            return response()->json([
-                'error' => 'Unable to create seller',
-                'message' => $e->getMessage(),
-            ], 500);
+            return $this->responseJson(StatusCodeEnum::CREATED, new SellerResource($seller));
+        } catch (CustomException $e) {
+            return $this->responseJsonError($e);
         }
     }
 
     /**
-     * Pegar todos vendedores
+     * Obter todos vendedores com suas comissões
      *
      * @return JsonResponse
      */
@@ -56,12 +54,20 @@ class SellersController extends Controller
     {
         try {
             $sellers = $this->sellerService->getAllSellersWithCommission();
-            return response()->json(SellerResource::collection($sellers));
-        } catch (Exception $e) {
-            return response()->json([
-                'error' => 'Unable to fetch sellers',
-                'message' => $e->getMessage(),
-            ], 500);
+
+            if (count($sellers) === 0) {
+                return $this->responseJson(StatusCodeEnum::NO_CONTENT);
+            }
+
+            if (!auth('api')->check()) {
+                return response()->json([
+                    'message' => 'Usuário não autenticado no guard API.',
+                ], 401);
+            }
+
+            return $this->responseJson(StatusCodeEnum::OK, SellerResource::collection($sellers));
+        } catch (CustomException $e) {
+            return $this->responseJsonError($e);
         }
     }
 }
