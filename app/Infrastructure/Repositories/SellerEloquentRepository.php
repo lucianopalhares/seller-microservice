@@ -26,8 +26,6 @@ class SellerEloquentRepository implements SellerRepository
             $eloquentSeller->email = $seller->getEmail();
             $eloquentSeller->save();
 
-            $eloquentSeller->indexToElasticsearch();
-
             $seller->setId($eloquentSeller->id);
 
             DB::commit();

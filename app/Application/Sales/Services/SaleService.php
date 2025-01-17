@@ -5,7 +5,10 @@ namespace App\Application\Sales\Services;
 use App\Domain\Sales\SaleRepository;
 use App\Domain\Sales\Sale;
 use App\Domain\Sellers\SellerRepository;
-use App\Domain\Sellers\Exceptions\SellerNotFoundException;
+use Elastic\Elasticsearch\ClientBuilder;
+use App\Services\ResponseService;
+use App\Exceptions\CustomException;
+use App\Enums\StatusCodeEnum;
 
 class SaleService
 {
@@ -18,26 +21,65 @@ class SaleService
         $this->sellerRepository = $sellerRepository;
     }
 
-    public function createSale(int $sellerId, float $value): Sale
+    public function createSale(int $sellerId, float $value): object
     {
-        $seller = $this->sellerRepository->findById($sellerId);
+        try {
+            $seller = $this->sellerRepository->findById($sellerId);
 
-        if (!$seller) {
-            throw new SellerNotFoundException("Vendedor não encontrado.");
+            if (!$seller) {
+                throw new CustomException(StatusCodeEnum::NOT_FOUND, "Vendendo não encontrado.");
+            }
+
+            if ($value <= 0) {
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST, "O valor da venda deve ser maior que zero.");
+            }
+
+            $commission = round($value * 0.085, 2);
+
+            $sale = new Sale(0, $seller, $value, $commission);
+            $save = $this->saleRepository->save($sale);
+
+            return ResponseService::response(StatusCodeEnum::OK, $save);
+
+        } catch (CustomException $e) {
+            return ResponseService::responseError($e);
         }
-
-        if ($value <= 0) {
-            throw new \InvalidArgumentException("O valor da venda deve ser maior que zero.");
-        }
-
-        $commission = round($value * 0.085, 2);
-
-        $sale = new Sale(0, $seller, $value, $commission);
-        return $this->saleRepository->save($sale);
     }
 
     public function getSalesBySeller(int $sellerId): array
     {
         return $this->saleRepository->findBySeller($sellerId);
+    }
+
+    /**
+     * Obter todas as vendas do Elasticsearch
+     *
+     * @return JsonResponse
+     * @throws Exception
+     */
+    public function getAllSales()
+    {
+        try {
+            $client = ClientBuilder::create()->setHosts([env('ELASTICSEARCH_HOST')])->build();
+
+            $params = [
+                'scroll' => '30s',
+                'size'   => 50,
+                'index' => 'sales',
+                'body'   => [
+                    'query' => [
+                        'match_all' => new \stdClass()
+                    ]
+                ]
+            ];
+
+            $response = $client->search($params);
+
+            $data = $response['hits']['hits'];
+
+            return ResponseService::response($data);
+        } catch (CustomException $e) {
+            return ResponseService::responseError((object) $e);
+        }
     }
 }

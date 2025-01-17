@@ -37,41 +37,30 @@ class SaleEloquentModel extends Model
     }
 
     /**
-     * Indexar dados no Elasticsearch.
+     * Indexar dados da venda no Elasticsearch.
      */
     public function indexToElasticsearch()
     {
-        $client = ClientBuilder::create()->setHosts([env('ELASTICSEARCH_HOST')])->build();
+        try {
+            $client = ClientBuilder::create()->setHosts([env('ELASTICSEARCH_HOST')])->build();
 
-        $params = [
-            'index' => 'sales',
-            'id'    => $this->id,
-            'body'  => [
-                'seller_id' => $this->seller_id,
-                'sale_value' => $this->sale_value,
-                'sale_commission' => $this->sale_commission,
-                'sale_date' => $this->created_at->toDateString(),
-            ]
-        ];
-
-        $params = [
-            'index' => 'test',
-            'body'  => [
-                'settings' => [
-                    'number_of_shards' => 1,  // Example of setting index properties
-                ],
-                'mappings' => [
-                    'properties' => [
-                        'name' => ['type' => 'text'],
-                        'email' => ['type' => 'text'],
-                    ]
+            $params = [
+                'index' => 'sales',
+                'id'    => $this->id,
+                'body'  => [
+                    'name' => $this->seller->name,
+                    'email' => $this->seller->email,
+                    'value' => $this->sale_value,
+                    'commission' => $this->sale_commission,
+                    'date' => $this->created_at->toDateString(),
                 ]
-            ]
-        ];
+            ];
 
+            $client->index($params);
 
-        $response = $client->index($params);
-
-        return $response;
+            return true;
+        } catch (\Exception $e) {
+            return false;
+        }
     }
 }

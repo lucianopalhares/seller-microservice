@@ -6,22 +6,32 @@ use App\Domain\Sales\Sale;
 use App\Domain\Sellers\Seller;
 use App\Domain\Sales\SaleRepository;
 use App\Infrastructure\Eloquent\SaleEloquentModel;
+use Illuminate\Support\Facades\DB;
 
 class SaleEloquentRepository implements SaleRepository
 {
     public function save(Sale $sale): Sale
     {
-        $SaleEloquentModel = new SaleEloquentModel();
-        $SaleEloquentModel->seller_id = $sale->getSeller()->getId();
-        $SaleEloquentModel->sale_value = $sale->getValue();
-        $SaleEloquentModel->sale_commission = $sale->getCommission();
-        $SaleEloquentModel->save();
+        try {
+            DB::beginTransaction();
 
-        $sale->setId($SaleEloquentModel->id);
-        $sale->setCommission($SaleEloquentModel->sale_commission);
-        $sale->setSaleDate($SaleEloquentModel->created_at);
+            $SaleEloquentModel = new SaleEloquentModel();
+            $SaleEloquentModel->seller_id = $sale->getSeller()->getId();
+            $SaleEloquentModel->sale_value = $sale->getValue();
+            $SaleEloquentModel->sale_commission = $sale->getCommission();
+            $SaleEloquentModel->save();
 
-        $SaleEloquentModel->indexToElasticsearch();
+            $SaleEloquentModel->indexToElasticsearch();
+            $sale->setId($SaleEloquentModel->id);
+            $sale->setCommission($SaleEloquentModel->sale_commission);
+            $sale->setSaleDate($SaleEloquentModel->created_at);
+
+            $SaleEloquentModel->indexToElasticsearch();
+
+            DB::commit();
+        } catch (\Exception $e) {
+            DB::rollBack();
+        }
 
         return $sale;
     }

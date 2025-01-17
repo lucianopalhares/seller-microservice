@@ -5,13 +5,13 @@ namespace App\Application\Sellers;
 use App\Application\Sellers\Services\SellerService;
 use App\Enums\StatusCodeEnum;
 use App\Exceptions\CustomException;
-use App\Application\BaseController;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\SellerRequest;
 use Illuminate\Http\JsonResponse;
 use App\Http\Resources\SellerResource;
-use Elastic\Elasticsearch\ClientBuilder;
+use App\Services\ResponseService;
 
-class SellersController extends BaseController
+class SellersController extends Controller
 {
     private SellerService $sellerService;
 
@@ -40,9 +40,9 @@ class SellersController extends BaseController
 
             $seller = $this->sellerService->createSeller($name, $email);
 
-            return $this->responseJson(StatusCodeEnum::CREATED, new SellerResource($seller));
+            return ResponseService::responseJson(StatusCodeEnum::CREATED, new SellerResource($seller));
         } catch (CustomException $e) {
-            return $this->responseJsonError($e);
+            return ResponseService::responseJsonError($e);
         }
     }
 
@@ -53,48 +53,16 @@ class SellersController extends BaseController
      */
     public function getAllSellers()
     {
-
-        try {
-            $client = ClientBuilder::create()->setHosts([env('ELASTICSEARCH_HOST')])->build();
-
-            $params = [
-                'index' => 'test',
-                'body'  => [
-                    'settings' => [
-                        'number_of_shards' => 1,  // Example of setting index properties
-                    ],
-                    'mappings' => [
-                        'properties' => [
-                            'name' => ['type' => 'text'],
-                            'email' => ['type' => 'text'],
-                        ]
-                    ]
-                ]
-            ];
-
-            $client->indices()->create($params);
-
-            print_r('foi');exit;
-        } catch (\Exception $e) {
-            print_r($e->getMessage());exit;
-        }
-
         try {
             $sellers = $this->sellerService->getAllSellersWithCommission();
 
             if (count($sellers) === 0) {
-                return $this->responseJson(StatusCodeEnum::NO_CONTENT);
+                return ResponseService::responseJson(StatusCodeEnum::NO_CONTENT);
             }
 
-            if (!auth('api')->check()) {
-                return response()->json([
-                    'message' => 'Usuário não autenticado no guard API.',
-                ], 401);
-            }
-
-            return $this->responseJson(StatusCodeEnum::OK, SellerResource::collection($sellers));
+            return ResponseService::responseJson(StatusCodeEnum::OK, SellerResource::collection($sellers));
         } catch (CustomException $e) {
-            return $this->responseJsonError($e);
+            return ResponseService::responseJsonError($e);
         }
     }
 
