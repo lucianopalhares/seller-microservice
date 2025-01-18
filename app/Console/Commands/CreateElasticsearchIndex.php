@@ -3,7 +3,8 @@
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
-use Elastic\Elasticsearch\ClientBuilder;
+use App\Services\ElasticsearchService;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Classe para criar um índice no Elasticsearch.
@@ -38,31 +39,14 @@ class CreateElasticsearchIndex extends Command
      */
     public function handle()
     {
-        $client = ClientBuilder::create()->setHosts([env('ELASTICSEARCH_HOST')])->build();
-
-        $params = [
-            'index' => 'sales',
-            'body'  => [
-                'settings' => [
-                    'number_of_shards' => 1,
-                ],
-                'mappings' => [
-                    'properties' => [
-                        'name' => ['type' => 'text'],
-                        'email' => ['type' => 'text'],
-                        'value' => ['type' => 'text'],
-                        'comission' => ['type' => 'text'],
-                        'date' => ['type' => 'text'],
-                    ]
-                ]
-            ]
-        ];
-
         try {
-            $client->indices()->create($params);
-            $this->info('Index de vendas criado');
+            $elasticsearchService = new ElasticsearchService();
+            $elasticsearchService->createSalesIndex();
+
+            $this->info('Index de vendas criado no elasticsearch');
         } catch (\Exception $e) {
-            $this->info('Erro: ' . $e->getMessage());
+            $this->info('Erro elasticsearch: ' . $e->getMessage());
+            Log::channel('seller_microservice')->error($e->getMessage());
         }
     }
 }

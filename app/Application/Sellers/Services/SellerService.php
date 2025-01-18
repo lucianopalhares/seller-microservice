@@ -139,7 +139,7 @@ class SellerService
 
             return true;
         } catch (\Exception $e) {
-            Log::channel('seller_microservice')->info($e->getMessage(), ['name' => $name, 'email' => $email]);
+            Log::channel('seller_microservice')->error($e->getMessage(), ['name' => $name, 'email' => $email]);
             return false;
         }
     }
@@ -158,7 +158,7 @@ class SellerService
 
             return true;
         } catch (\Exception $e) {
-            Log::channel('seller_microservice')->info($e->getMessage());
+            Log::channel('seller_microservice')->error($e->getMessage());
             return false;
         }
     }

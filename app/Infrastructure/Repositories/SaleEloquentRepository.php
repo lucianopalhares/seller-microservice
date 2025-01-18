@@ -6,7 +6,8 @@ use App\Domain\Sales\Sale;
 use App\Domain\Sellers\Seller;
 use App\Domain\Sales\SaleRepository;
 use App\Infrastructure\Eloquent\SaleEloquentModel;
-use Illuminate\Support\Facades\DB;
+use App\Services\ElasticsearchService;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Repositório de Vendas Eloquent
@@ -26,27 +27,37 @@ class SaleEloquentRepository implements SaleRepository
      */
     public function save(Sale $sale): Sale
     {
-        try {
-            DB::beginTransaction();
+        $SaleEloquentModel = new SaleEloquentModel();
+        $SaleEloquentModel->seller_id = $sale->getSeller()->getId();
+        $SaleEloquentModel->sale_value = $sale->getValue();
+        $SaleEloquentModel->sale_commission = $sale->getCommission();
+        $SaleEloquentModel->save();
 
-            $SaleEloquentModel = new SaleEloquentModel();
-            $SaleEloquentModel->seller_id = $sale->getSeller()->getId();
-            $SaleEloquentModel->sale_value = $sale->getValue();
-            $SaleEloquentModel->sale_commission = $sale->getCommission();
-            $SaleEloquentModel->save();
+        $sale->setId($SaleEloquentModel->id);
+        $sale->setCommission($SaleEloquentModel->sale_commission);
+        $sale->setSaleDate($SaleEloquentModel->created_at);
 
-            $SaleEloquentModel->indexToElasticsearch();
-
-            $sale->setId($SaleEloquentModel->id);
-            $sale->setCommission($SaleEloquentModel->sale_commission);
-            $sale->setSaleDate($SaleEloquentModel->created_at);
-
-            DB::commit();
-        } catch (\Exception $e) {
-            DB::rollBack();
-        }
+        $this->indexToElasticsearch($SaleEloquentModel);
 
         return $sale;
+    }
+
+    /**
+     * Salva a venda no elasticsearch.
+     *
+     * @param object $data Dados da venda.
+     * @return void
+     */
+    private function indexToElasticsearch(object $data): void
+    {
+        try {
+            $elasticsearchService = new ElasticsearchService();
+            $elasticsearchService->saveToSalesIndex($data);
+
+            Log::channel('seller_microservice')->info('vendas salvo no elasticsearch', (array) $data);
+        } catch (\Exception $e) {
+            Log::channel('seller_microservice')->error($e->getMessage(), (array) $data);
+        }
     }
 
     /**

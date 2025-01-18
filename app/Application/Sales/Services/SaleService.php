@@ -5,7 +5,8 @@ namespace App\Application\Sales\Services;
 use App\Domain\Sales\SaleRepository;
 use App\Domain\Sales\Sale;
 use App\Domain\Sellers\SellerRepository;
-use Elastic\Elasticsearch\ClientBuilder;
+use App\Services\ElasticsearchService;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 /**
@@ -39,7 +40,7 @@ class SaleService
      *
      * @var array
      */
-    private array $sales;
+    private array $sales = [];
 
     /**
      * Mensagem de erro.
@@ -158,13 +159,17 @@ class SaleService
             $commission = round($value * 0.085, 2);
 
             $sale = new Sale(0, $seller, $value, $commission);
+
+            DB::beginTransaction();
             $save = $this->saleRepository->save($sale);
+            DB::commit();
 
             $this->setSale($save);
 
             return true;
         } catch (\Exception $e) {
-            Log::channel('seller_microservice')->info($e->getMessage(), ['sellerId' => $sellerId, 'value' => $value]);
+            DB::rollBack();
+            Log::channel('seller_microservice')->error($e->getMessage(), ['sellerId' => $sellerId, 'value' => $value]);
             return false;
         }
     }
@@ -184,7 +189,7 @@ class SaleService
 
             return true;
         } catch (\Exception $e) {
-            Log::channel('seller_microservice')->info($e->getMessage(), ['sellerId' => $sellerId]);
+            Log::channel('seller_microservice')->error($e->getMessage(), ['sellerId' => $sellerId]);
             return false;
         }
     }
@@ -195,31 +200,18 @@ class SaleService
      * @return bool
      * @throws \Exception
      */
-    public function fetchSales(): bool
+    public function fetchAllSales(): bool
     {
         try {
-            $client = ClientBuilder::create()->setHosts([env('ELASTICSEARCH_HOST')])->build();
 
-            $params = [
-                'scroll' => '30s',
-                'size'   => 50,
-                'index' => 'sales',
-                'body'   => [
-                    'query' => [
-                        'match_all' => new \stdClass()
-                    ]
-                ]
-            ];
-
-            $response = $client->search($params);
-
-            $data = $response['hits']['hits'];
+            $elasticsearchService = new ElasticsearchService();
+            $data = $elasticsearchService->fetchAllSales();
 
             $this->setSales($data);
 
             return true;
         } catch (\Exception $e) {
-            Log::channel('seller_microservice')->info($e->getMessage());
+            Log::channel('seller_microservice')->error($e->getMessage());
             return false;
         }
     }
