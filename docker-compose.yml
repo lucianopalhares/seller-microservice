@@ -88,8 +88,11 @@ services:
     ports:
       - "15672:15672"
       - "5672:5672"
+    volumes:
+      - ./init_rabbitmq.sh:/init_rabbitmq.sh
     networks:
       - laravel_network
+    #command: ["bash", "/init_rabbitmq.sh"]
 
 networks:
   laravel_network:
