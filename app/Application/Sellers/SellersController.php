@@ -38,7 +38,10 @@ class SellersController extends Controller
             $name = $request->input('name');
             $email = $request->input('email');
 
-            $this->sellerService->createSeller($name, $email);
+            $created = $this->sellerService->createSeller($name, $email);
+
+            if ($created === false)
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST);
 
             if ($this->sellerService->errorExists())
                 throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->sellerService->getError());
@@ -59,7 +62,10 @@ class SellersController extends Controller
     public function getAllSellers(): JsonResponse
     {
         try {
-            $this->sellerService->fetchAllSellersWithCommission();
+            $response = $this->sellerService->fetchAllSellersWithCommission();
+
+            if ($response === false)
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST);
 
             $sellers = $this->sellerService->getSellers();
 

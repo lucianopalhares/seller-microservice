@@ -5,7 +5,9 @@ namespace App\Application\Sales\Services;
 use App\Domain\Sales\SaleRepository;
 use App\Domain\Sales\Sale;
 use App\Domain\Sellers\SellerRepository;
-use Elastic\Elasticsearch\ClientBuilder;
+use App\Services\ElasticsearchService;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Classe responsável pelos serviços relacionados a vendas.
@@ -36,9 +38,9 @@ class SaleService
     /**
      * Conjunto de vendas.
      *
-     * @var object
+     * @var array
      */
-    private object $sales;
+    private array $sales = [];
 
     /**
      * Mensagem de erro.
@@ -83,10 +85,10 @@ class SaleService
     /**
      * Define o conjunto de vendas.
      *
-     * @param object $sales
+     * @param array $sales
      * @return void
      */
-    public function setSales(object $sales): void
+    public function setSales(array $sales): void
     {
         $this->sales = $sales;
     }
@@ -94,9 +96,9 @@ class SaleService
     /**
      * Obtém o conjunto de vendas.
      *
-     * @return object
+     * @return array
      */
-    public function getSales(): object
+    public function getSales(): array
     {
         return $this->sales;
     }
@@ -157,12 +159,17 @@ class SaleService
             $commission = round($value * 0.085, 2);
 
             $sale = new Sale(0, $seller, $value, $commission);
+
+            DB::beginTransaction();
             $save = $this->saleRepository->save($sale);
+            DB::commit();
 
             $this->setSale($save);
 
             return true;
         } catch (\Exception $e) {
+            DB::rollBack();
+            Log::channel('seller_microservice')->error($e->getMessage(), ['sellerId' => $sellerId, 'value' => $value]);
             return false;
         }
     }
@@ -173,9 +180,18 @@ class SaleService
      * @param int $sellerId ID do vendedor.
      * @return array
      */
-    public function getSalesBySeller(int $sellerId): array
+    public function fetchSalesBySeller(int $sellerId): bool
     {
-        return $this->saleRepository->findBySeller($sellerId);
+        try {
+            $sales = $this->saleRepository->findBySeller($sellerId);
+
+            $this->setSales($sales);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::channel('seller_microservice')->error($e->getMessage(), ['sellerId' => $sellerId]);
+            return false;
+        }
     }
 
     /**
@@ -184,31 +200,18 @@ class SaleService
      * @return bool
      * @throws \Exception
      */
-    public function fetchSales(): bool
+    public function fetchAllSales(): bool
     {
         try {
-            $client = ClientBuilder::create()->setHosts([env('ELASTICSEARCH_HOST')])->build();
 
-            $params = [
-                'scroll' => '30s',
-                'size'   => 50,
-                'index' => 'sales',
-                'body'   => [
-                    'query' => [
-                        'match_all' => new \stdClass()
-                    ]
-                ]
-            ];
+            $elasticsearchService = new ElasticsearchService();
+            $data = $elasticsearchService->fetchAllSales();
 
-            $response = $client->search($params);
-
-            $data = $response['hits']['hits'];
-
-            $this->setSales((object) $data);
+            $this->setSales($data);
 
             return true;
         } catch (\Exception $e) {
-            $this->setError($e->getMessage());
+            Log::channel('seller_microservice')->error($e->getMessage());
             return false;
         }
     }

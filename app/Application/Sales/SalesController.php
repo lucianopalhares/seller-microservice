@@ -51,7 +51,10 @@ class SalesController extends Controller
                 throw new CustomException(StatusCodeEnum::BAD_REQUEST);
             }
 
-            $this->saleService->createSale($sellerId, $saleValue);
+            $created = $this->saleService->createSale($sellerId, $saleValue);
+
+            if ($created === false)
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST);
 
             if ($this->saleService->errorExists())
                 throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->saleService->getError());
@@ -78,10 +81,15 @@ class SalesController extends Controller
                 throw new CustomException(StatusCodeEnum::BAD_REQUEST);
             }
 
-            $sales = $this->saleService->getSalesBySeller($sellerId);
+            $response = $this->saleService->fetchSalesBySeller($sellerId);
+
+            if ($response === false)
+                return ResponseService::responseJson(StatusCodeEnum::NO_CONTENT);
 
             if ($this->saleService->errorExists())
                 throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->saleService->getError());
+
+            $sales = $this->saleService->getSales();
 
             if (count($sales) === 0) {
                 return ResponseService::responseJson(StatusCodeEnum::NO_CONTENT);
@@ -103,12 +111,19 @@ class SalesController extends Controller
     public function getAllSales(): JsonResponse
     {
         try {
-            $this->saleService->fetchSales();
+            $response = $this->saleService->fetchAllSales();
+
+            if ($response == false)
+                return ResponseService::responseJson(StatusCodeEnum::NO_CONTENT);
 
             if ($this->saleService->errorExists())
                 throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->saleService->getError());
 
             $sales = $this->saleService->getSales();
+
+            if (count($sales) === 0) {
+                return ResponseService::responseJson(StatusCodeEnum::NO_CONTENT);
+            }
 
             return ResponseService::responseJson(StatusCodeEnum::OK, $sales);
         } catch (CustomException $e) {
