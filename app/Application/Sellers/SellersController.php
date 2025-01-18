@@ -5,12 +5,13 @@ namespace App\Application\Sellers;
 use App\Application\Sellers\Services\SellerService;
 use App\Enums\StatusCodeEnum;
 use App\Exceptions\CustomException;
-use App\Application\BaseController;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\SellerRequest;
 use Illuminate\Http\JsonResponse;
 use App\Http\Resources\SellerResource;
+use App\Services\ResponseService;
 
-class SellersController extends BaseController
+class SellersController extends Controller
 {
     private SellerService $sellerService;
 
@@ -37,11 +38,16 @@ class SellersController extends BaseController
             $name = $request->input('name');
             $email = $request->input('email');
 
-            $seller = $this->sellerService->createSeller($name, $email);
+            $this->sellerService->createSeller($name, $email);
 
-            return $this->responseJson(StatusCodeEnum::CREATED, new SellerResource($seller));
+            if ($this->sellerService->errorExists())
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->sellerService->getError());
+
+            $collection = $this->sellerService->getSeller();
+
+            return ResponseService::responseJson(StatusCodeEnum::CREATED, new SellerResource($collection));
         } catch (CustomException $e) {
-            return $this->responseJsonError($e);
+            return ResponseService::responseJsonError($e);
         }
     }
 
@@ -53,21 +59,19 @@ class SellersController extends BaseController
     public function getAllSellers(): JsonResponse
     {
         try {
-            $sellers = $this->sellerService->getAllSellersWithCommission();
+            $this->sellerService->fetchAllSellersWithCommission();
 
-            if (count($sellers) === 0) {
-                return $this->responseJson(StatusCodeEnum::NO_CONTENT);
-            }
+            $sellers = $this->sellerService->getSellers();
 
-            if (!auth('api')->check()) {
-                return response()->json([
-                    'message' => 'Usuário não autenticado no guard API.',
-                ], 401);
-            }
+            if ($this->sellerService->errorExists())
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->sellerService->getError());
 
-            return $this->responseJson(StatusCodeEnum::OK, SellerResource::collection($sellers));
+            if (count($sellers) === 0)
+                return ResponseService::responseJson(StatusCodeEnum::NO_CONTENT);
+
+            return ResponseService::responseJson(StatusCodeEnum::OK, SellerResource::collection($sellers));
         } catch (CustomException $e) {
-            return $this->responseJsonError($e);
+            return ResponseService::responseJsonError($e);
         }
     }
 }

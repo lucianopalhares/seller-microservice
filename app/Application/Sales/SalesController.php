@@ -5,15 +5,17 @@ namespace App\Application\Sales;
 use App\Application\Sales\Services\SaleService;
 use App\Enums\StatusCodeEnum;
 use App\Exceptions\CustomException;
-use App\Application\BaseController;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\SaleRequest;
 use App\Http\Resources\SaleResource;
 use Illuminate\Http\JsonResponse;
+use App\Services\ResponseService;
+use App\Domain\Sales\Sale;
 
 /**
  * Controlador responsável por gerenciar vendas.
  */
-class SalesController extends BaseController
+class SalesController extends Controller
 {
     /**
      * Serviço de vendas.
@@ -49,11 +51,16 @@ class SalesController extends BaseController
                 throw new CustomException(StatusCodeEnum::BAD_REQUEST);
             }
 
-            $sale = $this->saleService->createSale($sellerId, $saleValue);
+            $this->saleService->createSale($sellerId, $saleValue);
 
-            return $this->responseJson(StatusCodeEnum::CREATED, new SaleResource($sale));
+            if ($this->saleService->errorExists())
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->saleService->getError());
+
+            $collection = $this->saleService->getSale();
+
+            return ResponseService::responseJson(StatusCodeEnum::CREATED, new SaleResource($collection));
         } catch (CustomException $e) {
-            return $this->responseJsonError($e);
+            return ResponseService::responseJsonError($e);
         }
     }
 
@@ -73,13 +80,39 @@ class SalesController extends BaseController
 
             $sales = $this->saleService->getSalesBySeller($sellerId);
 
+            if ($this->saleService->errorExists())
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->saleService->getError());
+
             if (count($sales) === 0) {
-                return $this->responseJson(StatusCodeEnum::NO_CONTENT);
+                return ResponseService::responseJson(StatusCodeEnum::NO_CONTENT);
             }
 
-            return $this->responseJson(StatusCodeEnum::OK, SaleResource::collection($sales));
+            return ResponseService::responseJson(StatusCodeEnum::OK, SaleResource::collection($sales));
         } catch (CustomException $e) {
-            return $this->responseJsonError($e);
+            return ResponseService::responseJsonError($e);
+        }
+    }
+
+    /**
+     * Obter todas as vendas do elasticsearch.
+     *
+     * @param int $sellerId
+     * @return JsonResponse
+     * @throws CustomException
+     */
+    public function getAllSales(): JsonResponse
+    {
+        try {
+            $this->saleService->fetchSales();
+
+            if ($this->saleService->errorExists())
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->saleService->getError());
+
+            $sales = $this->saleService->getSales();
+
+            return ResponseService::responseJson(StatusCodeEnum::OK, $sales);
+        } catch (CustomException $e) {
+            return ResponseService::responseJsonError($e);
         }
     }
 }

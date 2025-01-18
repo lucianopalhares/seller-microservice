@@ -22,4 +22,7 @@ Route::middleware([JwtMiddleware::class])->group(function () {
         Route::post('/', [SalesController::class, 'createSale']);
         Route::get('{id}', [SalesController::class, 'getSalesBySeller']);
     });
+
+    Route::get('/sales-all', [SalesController::class, 'getAllSales']);
 });
+

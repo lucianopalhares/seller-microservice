@@ -26,8 +26,6 @@ class CustomException extends Exception
     public function __construct(StatusCodeEnum $StatusCodeEnum, string $message = null)
     {
         $this->StatusCodeEnum = $StatusCodeEnum;
-
-        // Usando a mensagem do enum diretamente, se a mensagem personalizada não for fornecida
         $messageToUse = $message ?? $StatusCodeEnum->message();
 
         parent::__construct($messageToUse, $StatusCodeEnum->value);
@@ -54,7 +52,6 @@ class CustomException extends Exception
         // Descomente a linha abaixo se quiser pegar a mensagem original do erro
         // return $this->getMessage();
 
-        // Retorna a mensagem do tipo do erro
         return $this->getStatusCodeEnum()->message();
     }
 }
