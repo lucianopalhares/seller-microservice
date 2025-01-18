@@ -69,10 +69,11 @@ services:
     container_name: seller_tray_kibana
     environment:
       - ELASTICSEARCH_HOSTS=http://seller_tray_elasticsearch:9200
-      - ELASTICSEARCH_USERNAME=elastic
       - ELASTICSEARCH_PASSWORD=elastic
     ports:
-      - "5601:5601"
+      - "5603:5601"
+    expose:
+      - 5601
     networks:
       - laravel_network
     depends_on:
