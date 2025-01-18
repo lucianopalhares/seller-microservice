@@ -8,8 +8,22 @@ use App\Domain\Sales\SaleRepository;
 use App\Infrastructure\Eloquent\SaleEloquentModel;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Repositório de Vendas Eloquent
+ *
+ * Implementação do repositório de vendas usando Eloquent ORM para persistir e recuperar dados das vendas.
+ */
 class SaleEloquentRepository implements SaleRepository
 {
+    /**
+     * Salva uma venda no banco de dados.
+     *
+     * Esse método cria uma nova venda no banco de dados e a persiste. Além disso, realiza a indexação da venda no Elasticsearch.
+     * Se ocorrer algum erro, a transação é revertida.
+     *
+     * @param Sale $sale A venda a ser salva.
+     * @return Sale A venda com os dados atualizados (incluindo o ID gerado).
+     */
     public function save(Sale $sale): Sale
     {
         try {
@@ -22,11 +36,10 @@ class SaleEloquentRepository implements SaleRepository
             $SaleEloquentModel->save();
 
             $SaleEloquentModel->indexToElasticsearch();
+
             $sale->setId($SaleEloquentModel->id);
             $sale->setCommission($SaleEloquentModel->sale_commission);
             $sale->setSaleDate($SaleEloquentModel->created_at);
-
-            $SaleEloquentModel->indexToElasticsearch();
 
             DB::commit();
         } catch (\Exception $e) {
@@ -36,6 +49,15 @@ class SaleEloquentRepository implements SaleRepository
         return $sale;
     }
 
+    /**
+     * Encontra todas as vendas de um vendedor específico.
+     *
+     * Esse método recupera todas as vendas de um vendedor a partir do banco de dados,
+     * mapeando os dados para objetos do domínio de vendas.
+     *
+     * @param int $sellerId O ID do vendedor.
+     * @return array Uma lista de objetos Sale representando as vendas do vendedor.
+     */
     public function findBySeller(int $sellerId): array
     {
         return SaleEloquentModel::where('seller_id', $sellerId)->get()->map(function ($sale) {
@@ -50,6 +72,13 @@ class SaleEloquentRepository implements SaleRepository
         })->toArray();
     }
 
+    /**
+     * Encontra todas as vendas.
+     *
+     * Esse método recupera todas as vendas do banco de dados e as mapeia para objetos do domínio de vendas.
+     *
+     * @return array Uma lista de objetos Sale representando todas as vendas.
+     */
     public function findAll(): array
     {
         return SaleEloquentModel::all()->map(function ($sale) {

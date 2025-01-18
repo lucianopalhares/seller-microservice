@@ -4,7 +4,6 @@ namespace App\Infrastructure\Eloquent;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Elastic\Elasticsearch\ClientBuilder;
 
 class SellerEloquentModel extends Model
 {
