@@ -4,6 +4,7 @@ namespace App\Application\Sellers\Services;
 
 use App\Domain\Sellers\SellerRepository;
 use App\Domain\Sellers\Seller;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Classe responsável pelos serviços relacionados aos vendedores.
@@ -138,7 +139,7 @@ class SellerService
 
             return true;
         } catch (\Exception $e) {
-            $this->setError($e->getMessage());
+            Log::channel('seller_microservice')->info($e->getMessage(), ['name' => $name, 'email' => $email]);
             return false;
         }
     }
@@ -157,7 +158,7 @@ class SellerService
 
             return true;
         } catch (\Exception $e) {
-            $this->setError($e->getMessage());
+            Log::channel('seller_microservice')->info($e->getMessage());
             return false;
         }
     }

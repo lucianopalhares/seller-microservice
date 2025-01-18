@@ -127,6 +127,12 @@ return [
             'path' => storage_path('logs/laravel.log'),
         ],
 
+        'seller_microservice' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/seller_microservice.log'),
+            'level' => 'info',
+            'days' => 7,
+        ],
     ],
 
 ];

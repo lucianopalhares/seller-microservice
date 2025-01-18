@@ -6,6 +6,7 @@ use App\Domain\Sales\SaleRepository;
 use App\Domain\Sales\Sale;
 use App\Domain\Sellers\SellerRepository;
 use Elastic\Elasticsearch\ClientBuilder;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Classe responsável pelos serviços relacionados a vendas.
@@ -36,9 +37,9 @@ class SaleService
     /**
      * Conjunto de vendas.
      *
-     * @var object
+     * @var array
      */
-    private object $sales;
+    private array $sales;
 
     /**
      * Mensagem de erro.
@@ -83,10 +84,10 @@ class SaleService
     /**
      * Define o conjunto de vendas.
      *
-     * @param object $sales
+     * @param array $sales
      * @return void
      */
-    public function setSales(object $sales): void
+    public function setSales(array $sales): void
     {
         $this->sales = $sales;
     }
@@ -94,9 +95,9 @@ class SaleService
     /**
      * Obtém o conjunto de vendas.
      *
-     * @return object
+     * @return array
      */
-    public function getSales(): object
+    public function getSales(): array
     {
         return $this->sales;
     }
@@ -163,6 +164,7 @@ class SaleService
 
             return true;
         } catch (\Exception $e) {
+            Log::channel('seller_microservice')->info($e->getMessage(), ['sellerId' => $sellerId, 'value' => $value]);
             return false;
         }
     }
@@ -173,9 +175,18 @@ class SaleService
      * @param int $sellerId ID do vendedor.
      * @return array
      */
-    public function getSalesBySeller(int $sellerId): array
+    public function fetchSalesBySeller(int $sellerId): bool
     {
-        return $this->saleRepository->findBySeller($sellerId);
+        try {
+            $sales = $this->saleRepository->findBySeller($sellerId);
+
+            $this->setSales($sales);
+
+            return true;
+        } catch (\Exception $e) {
+            Log::channel('seller_microservice')->info($e->getMessage(), ['sellerId' => $sellerId]);
+            return false;
+        }
     }
 
     /**
@@ -204,11 +215,11 @@ class SaleService
 
             $data = $response['hits']['hits'];
 
-            $this->setSales((object) $data);
+            $this->setSales($data);
 
             return true;
         } catch (\Exception $e) {
-            $this->setError($e->getMessage());
+            Log::channel('seller_microservice')->info($e->getMessage());
             return false;
         }
     }

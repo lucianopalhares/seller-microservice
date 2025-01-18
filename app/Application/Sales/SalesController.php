@@ -78,10 +78,12 @@ class SalesController extends Controller
                 throw new CustomException(StatusCodeEnum::BAD_REQUEST);
             }
 
-            $sales = $this->saleService->getSalesBySeller($sellerId);
+            $this->saleService->fetchSalesBySeller($sellerId);
 
             if ($this->saleService->errorExists())
                 throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->saleService->getError());
+
+            $sales = $this->saleService->getSales();
 
             if (count($sales) === 0) {
                 return ResponseService::responseJson(StatusCodeEnum::NO_CONTENT);
