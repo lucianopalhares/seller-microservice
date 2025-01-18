@@ -10,7 +10,11 @@ class JwtMiddleware
 {
     public function handle(Request $request, Closure $next)
     {
-
+        if (!auth('api')->check()) {
+            return response()->json([
+                'message' => StatusCodeEnum::UNAUTHORIZED->message(),
+            ], StatusCodeEnum::UNAUTHORIZED->value);
+        }
 
         return $next($request);
     }

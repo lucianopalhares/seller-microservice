@@ -10,5 +10,5 @@ interface SellerRepository
 
     public function findAll(): array;
 
-    public function getAllSellersWithTotalCommission(): array;
+    public function fetchAllSellersWithCommission(): array;
 }

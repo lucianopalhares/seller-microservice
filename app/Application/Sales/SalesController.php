@@ -93,8 +93,15 @@ class SalesController extends Controller
         }
     }
 
-    public function getAllSales() {
-
+    /**
+     * Obter todas as vendas do elasticsearch.
+     *
+     * @param int $sellerId
+     * @return JsonResponse
+     * @throws CustomException
+     */
+    public function getAllSales(): JsonResponse
+    {
         try {
             $this->saleService->fetchSales();
 
@@ -108,6 +115,4 @@ class SalesController extends Controller
             return ResponseService::responseJsonError($e);
         }
     }
-
-
 }

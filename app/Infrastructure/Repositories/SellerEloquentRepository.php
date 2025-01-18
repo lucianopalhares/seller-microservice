@@ -64,7 +64,7 @@ class SellerEloquentRepository implements SellerRepository
         })->toArray();
     }
 
-    public function getAllSellersWithTotalCommission(): array
+    public function fetchAllSellersWithCommission(): array
     {
         // Pega os vendedores com a soma das comissões associadas a eles
         $eloquentSellers = SellerEloquentModel::withSum('sales as total_commission', 'sale_commission')->get();

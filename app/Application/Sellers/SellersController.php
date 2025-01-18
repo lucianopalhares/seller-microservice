@@ -38,9 +38,14 @@ class SellersController extends Controller
             $name = $request->input('name');
             $email = $request->input('email');
 
-            $seller = $this->sellerService->createSeller($name, $email);
+            $this->sellerService->createSeller($name, $email);
 
-            return ResponseService::responseJson(StatusCodeEnum::CREATED, new SellerResource($seller));
+            if ($this->sellerService->errorExists())
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->sellerService->getError());
+
+            $collection = $this->sellerService->getSeller();
+
+            return ResponseService::responseJson(StatusCodeEnum::CREATED, new SellerResource($collection));
         } catch (CustomException $e) {
             return ResponseService::responseJsonError($e);
         }
@@ -51,20 +56,22 @@ class SellersController extends Controller
      *
      * @return JsonResponse
      */
-    public function getAllSellers()
+    public function getAllSellers(): JsonResponse
     {
         try {
-            $sellers = $this->sellerService->getAllSellersWithCommission();
+            $this->sellerService->fetchAllSellersWithCommission();
 
-            if (count($sellers) === 0) {
+            $sellers = $this->sellerService->getSellers();
+
+            if ($this->sellerService->errorExists())
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->sellerService->getError());
+
+            if (count($sellers) === 0)
                 return ResponseService::responseJson(StatusCodeEnum::NO_CONTENT);
-            }
 
             return ResponseService::responseJson(StatusCodeEnum::OK, SellerResource::collection($sellers));
         } catch (CustomException $e) {
             return ResponseService::responseJsonError($e);
         }
     }
-
-
 }
