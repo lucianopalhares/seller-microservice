@@ -51,8 +51,12 @@ class SalesController extends Controller
                 throw new CustomException(StatusCodeEnum::BAD_REQUEST);
             }
 
-            $sale = $this->saleService->createSale($sellerId, $saleValue);
-            $collection = $sale->data;
+            $this->saleService->createSale($sellerId, $saleValue);
+
+            if ($this->saleService->errorExists())
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->saleService->getError());
+
+            $collection = $this->saleService->getSale();
 
             return ResponseService::responseJson(StatusCodeEnum::CREATED, new SaleResource($collection));
         } catch (CustomException $e) {
@@ -76,6 +80,9 @@ class SalesController extends Controller
 
             $sales = $this->saleService->getSalesBySeller($sellerId);
 
+            if ($this->saleService->errorExists())
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->saleService->getError());
+
             if (count($sales) === 0) {
                 return ResponseService::responseJson(StatusCodeEnum::NO_CONTENT);
             }
@@ -88,11 +95,18 @@ class SalesController extends Controller
 
     public function getAllSales() {
 
-            $sales = $this->saleService->getAllSales();
+        try {
+            $this->saleService->fetchSales();
+
+            if ($this->saleService->errorExists())
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->saleService->getError());
+
+            $sales = $this->saleService->getSales();
 
             return ResponseService::responseJson(StatusCodeEnum::OK, $sales);
-
-
+        } catch (CustomException $e) {
+            return ResponseService::responseJsonError($e);
+        }
     }
 
 

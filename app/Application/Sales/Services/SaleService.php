@@ -6,14 +6,14 @@ use App\Domain\Sales\SaleRepository;
 use App\Domain\Sales\Sale;
 use App\Domain\Sellers\SellerRepository;
 use Elastic\Elasticsearch\ClientBuilder;
-use App\Services\ResponseService;
-use App\Exceptions\CustomException;
-use App\Enums\StatusCodeEnum;
 
 class SaleService
 {
     private SaleRepository $saleRepository;
     private SellerRepository $sellerRepository;
+    private Sale $sale;
+    private Object $sales;
+    private string $error;
 
     public function __construct(SaleRepository $saleRepository, SellerRepository $sellerRepository)
     {
@@ -21,17 +21,19 @@ class SaleService
         $this->sellerRepository = $sellerRepository;
     }
 
-    public function createSale(int $sellerId, float $value): object
+    public function createSale(int $sellerId, float $value): bool
     {
         try {
             $seller = $this->sellerRepository->findById($sellerId);
 
             if (!$seller) {
-                throw new CustomException(StatusCodeEnum::NOT_FOUND, "Vendendo não encontrado.");
+                $this->setError("Vendendo não encontrado.");
+                return false;
             }
 
             if ($value <= 0) {
-                throw new CustomException(StatusCodeEnum::BAD_REQUEST, "O valor da venda deve ser maior que zero.");
+                $this->setError("O valor da venda deve ser maior que zero.");
+                return false;
             }
 
             $commission = round($value * 0.085, 2);
@@ -39,11 +41,47 @@ class SaleService
             $sale = new Sale(0, $seller, $value, $commission);
             $save = $this->saleRepository->save($sale);
 
-            return ResponseService::response(StatusCodeEnum::OK, $save);
+            $this->setSale($save);
 
-        } catch (CustomException $e) {
-            return ResponseService::responseError($e);
+            return true;
+        } catch (\Exception $e) {
+            return false;
         }
+    }
+
+    public function setSale(Sale $sale): void
+    {
+        $this->sale = $sale;
+    }
+
+    public function getSale(): Sale
+    {
+        return $this->sale;
+    }
+
+    public function setSales(object $sales): void
+    {
+        $this->sales = $sales;
+    }
+
+    public function getSales(): object
+    {
+        return $this->sales;
+    }
+
+    public function setError(string $error): void
+    {
+        $this->error = $error;
+    }
+
+    public function getError(): string
+    {
+        return $this->error;
+    }
+
+    public function errorExists(): bool
+    {
+        return empty($this->error) === false;
     }
 
     public function getSalesBySeller(int $sellerId): array
@@ -54,10 +92,10 @@ class SaleService
     /**
      * Obter todas as vendas do Elasticsearch
      *
-     * @return JsonResponse
+     * @return bool
      * @throws Exception
      */
-    public function getAllSales()
+    public function fetchSales(): bool
     {
         try {
             $client = ClientBuilder::create()->setHosts([env('ELASTICSEARCH_HOST')])->build();
@@ -77,9 +115,12 @@ class SaleService
 
             $data = $response['hits']['hits'];
 
-            return ResponseService::response($data);
-        } catch (CustomException $e) {
-            return ResponseService::responseError((object) $e);
+            $this->setSales((object) $data);
+
+            return true;
+        } catch (\Exception $e) {
+            $this->setError($e->getMessage());
+            return false;
         }
     }
 }
