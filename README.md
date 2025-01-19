@@ -47,6 +47,10 @@ php artisan migrate
 php artisan elasticsearch:create-index
 ```
 
+### documentação da api de microserviços
+
+http://localhost:8089
+
 ### Como usar
 
 #### crie um usuário pela api
