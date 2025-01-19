@@ -61,15 +61,12 @@ class RabbitMQService
     public function declareExchangeQueueBind($exchange, $queue, $routingKey)
     {
         try {
-            // Declare a exchange
             $this->channel->exchange_declare($exchange, 'direct', false, true, false);
             Log::info("Exchange '{$exchange}' declarada com sucesso.");
 
-            // Declare a fila
             $this->channel->queue_declare($queue, false, true, false, false);
             Log::info("Fila '{$queue}' declarada com sucesso.");
 
-            // Bind a fila à exchange com a routing key
             $this->channel->queue_bind($queue, $exchange, $routingKey);
             Log::info("Fila '{$queue}' vinculada à exchange '{$exchange}' com a chave de roteamento '{$routingKey}'.");
 
@@ -98,6 +95,8 @@ class RabbitMQService
             $msg = new AMQPMessage($message);
             $this->channel->basic_publish($msg, '', $queue);
 
+            $this->closeConnection();
+
             $this->error = false;
         } catch (Exception $e) {
             $this->error = true;
@@ -118,13 +117,7 @@ class RabbitMQService
         if ($this->error === true) return;
 
         try {
-
-
-
-
-
             $this->channel->basic_consume($queue, '', false, true, false, false, $callback);
-
             $this->channel->consume();
 
             $this->error = false;

@@ -35,12 +35,8 @@ class PublishSalesToRabbitMQ extends Command
     public function handle(SaleService $saleService)
     {
         try {
-            // Buscar todas as vendas usando o serviço
-            $saleService->fetchAllSales();
-
+            $saleService->getSalesOfTheDay();
             $items = $saleService->getSales();
-
-
 
             if (empty($items)) {
                 $this->warn('Nenhuma venda encontrada para publicar.');
@@ -51,20 +47,16 @@ class PublishSalesToRabbitMQ extends Command
 
             foreach ($items as $item) {
                 try {
-                    print_r($item);
                     $sale = new SaleResource($item);
                     $array = $sale->toArray(request());
                     $sales[] = $array;
                 } catch (\Exception $e) {
-                    // Registrar erro específico ao publicar a mensagem
                     Log::error('Erro ao publicar venda no RabbitMQ', [
                         'sale_id' => $sale['id'] ?? 'Desconhecido',
                         'error' => $e->getMessage(),
                     ]);
                 }
             }
-
-            print_r($sales);
 
             $message = json_encode($sales);
 
@@ -75,7 +67,6 @@ class PublishSalesToRabbitMQ extends Command
             $this->info('Registros de vendas publicados no RabbitMQ com sucesso.');
 
         } catch (\Exception $e) {
-            // Registrar erro genérico durante a execução do comando
             Log::error('Erro durante a publicação das vendas no RabbitMQ', [
                 'error' => $e->getMessage(),
             ]);

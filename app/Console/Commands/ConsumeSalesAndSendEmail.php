@@ -55,12 +55,10 @@ class ConsumeSalesAndSendEmail extends Command
     public function handle(SaleService $saleService)
     {
         try {
-
             $exchange = Config::get('services.rabbitmq.exchange');
             $queue = Config::get('services.rabbitmq.queue');
             $bind = Config::get('services.rabbitmq.bind');
 
-                       // Declarar a exchange, fila e bind no RabbitMQ, sem causar erro se já existirem
             $this->rabbitMQService->declareExchangeQueueBind($exchange, $queue, $bind);
 
             $this->rabbitMQService->consumeMessage($queue, function ($message) {

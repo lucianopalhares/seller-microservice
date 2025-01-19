@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('seller_id')->constrained('sellers');
             $table->decimal('sale_value', 10, 2);
             $table->decimal('sale_commission', 10, 2);
+            $table->boolean('enqueued')->default(false)->nullable();
             $table->timestamps();
         });
     }

@@ -195,14 +195,14 @@ class SaleService
     }
 
     /**
-     * Obtém todas as vendas do Elasticsearch.
+     * Obtém todas as vendas do dia.
      *
      * @return bool
      */
-    public function fetchAllSales(): bool
+    public function getSalesOfTheDay(): bool
     {
         try {
-            $sales = $this->saleRepository->findAll();
+            $sales = $this->saleRepository->getSalesOfTheDay();
 
             $this->setSales($sales);
 

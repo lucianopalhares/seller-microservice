@@ -101,16 +101,16 @@ class SalesController extends Controller
     }
 
     /**
-     * Obter todas as vendas do elasticsearch.
+     * Obter todas as vendas do dia.
      *
      * @param int $sellerId
      * @return JsonResponse
      * @throws CustomException
      */
-    public function getAllSales(): JsonResponse
+    public function getSalesOfTheDay(): JsonResponse
     {
         try {
-            $this->saleService->fetchAllSales();
+            $this->saleService->getSalesOfTheDay();
 
             if ($this->saleService->errorExists())
                 throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->saleService->getError());

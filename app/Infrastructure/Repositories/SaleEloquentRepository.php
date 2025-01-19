@@ -84,17 +84,22 @@ class SaleEloquentRepository implements SaleRepository
      *
      * @return array Uma lista de objetos Sale representando todas as vendas.
      */
-    public function findAll(): array
+    public function getSalesOfTheDay(): array
     {
-        return SaleEloquentModel::all()->map(function ($sale) {
-            $eloquentSeller = $sale->seller;
+        $startOfDay = \Carbon\Carbon::today();
+        $endOfDay = \Carbon\Carbon::now();
 
-            $seller = new Seller(
-                $eloquentSeller->id,
-                $eloquentSeller->name,
-                $eloquentSeller->email
-            );
-            return new Sale($sale->id, $seller, $sale->sale_value, $sale->sale_commission, $sale->created_at);
+        return SaleEloquentModel::where('enqueued', false)
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->get()->map(function ($sale) {
+                $eloquentSeller = $sale->seller;
+
+                $seller = new Seller(
+                    $eloquentSeller->id,
+                    $eloquentSeller->name,
+                    $eloquentSeller->email
+                );
+                return new Sale($sale->id, $seller, $sale->sale_value, $sale->sale_commission, $sale->created_at);
         })->toArray();
     }
 }
