@@ -23,10 +23,22 @@ Ao final de cada dia é enviado um email com um relatório com a soma de todas a
 docker exec -it seller_tray_app bash
 ```
 
+#### crie a chave da aplicação
+
+```
+php artisan key:generate
+```
+
 #### instale as dependencias necessarias
 
 ```
 composer install
+```
+
+#### crie as tabelas do banco de dados
+
+```
+php artisan migrate
 ```
 
 #### crie o indice de vendas para o elasticsearch
@@ -35,34 +47,81 @@ composer install
 php artisan elasticsearch:create-index
 ```
 
-### entre no rabitMQ
+### Como usar
+
+#### crie um usuário pela api
 
 ```
-docker exec -it seller_tray_rabbitmq bash
+POST http://localhost:8000/api/register
+
+{
+    "name": "John Doe",
+    "email": "john@example.com",
+    "password": "password",
+    "password_confirmation": "password"
+}
+
+a conta do usuário sera criada
+e um token de acesso sera gerado
 ```
 
-### crie a fila para envio de email das vendas
+#### utilize o token para as proximas etapas
+
+#### crie um vendedor
 
 ```
-rabbitmqadmin -u user -p password declare queue name=email_sales_queue durable=true
+use o token no BeaterToken do authorization
+
+POST http://localhost:8000/api/sellers
+
+{
+    "name": "fabio",
+    "email": "fabio@test.com"
+}
 ```
 
-### crie a exchange
+#### crie uma venda
 
 ```
-rabbitmqadmin -u user -p password declare exchange name=email_sales_events type=direct durable=true
+use o token no BeaterToken do authorization
+
+POST http://localhost:8000/api/sales
+
+{
+    "seller_id": 1,
+    "sale_value": 40.99
+}
 ```
 
-### crie um binding entre a fila e a exchange
+#### listar os vendedores
 
 ```
-rabbitmqadmin -u user -p password declare binding source=email_sales_events destination=email_sales_queue destination_type=queue routing_key=email_sales_binding
+use o token no BeaterToken do authorization
+
+GET http://localhost:8000/api/sellers
 ```
 
-### public uma mensagem de teste na fila
+#### listar as vendas de um vendedor
 
 ```
-rabbitmqadmin -u user -p password publish exchange=email_sales_events routing_key=email_sales_binding payload="Hello World"
+use o token no BeaterToken do authorization
+
+GET http://localhost:8000/api/sales/1
+```
+
+#### se o token expirar, logar novamente
+
+```
+use o token no BeaterToken do authorization
+
+POST http://localhost:8000/api/login
+
+{
+    "name": "fabio",
+    "email": "fabio@test.com"
+}
+
+um novo token sera gerado
 ```
 
 ### Acesso
