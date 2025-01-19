@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Log;
 class ElasticsearchService
 {
     protected $client;
+    private $error = false;
 
     public function __construct()
     {
@@ -18,19 +19,24 @@ class ElasticsearchService
             $hosts = config('elasticsearch.hosts');
 
             if (empty($hosts)) {
-                throw new Exception('servidor do Elasticsearch inválido.');
+                $this->error = true;
+                Log::channel('seller_microservice')->error('servidor do Elasticsearch inválido.');
             }
 
             $this->client = ClientBuilder::create()->setHosts($hosts)->build();
 
             if (!$this->client->ping()) {
-                throw new Exception('Falha na conexão com o Elasticsearch.');
+                $this->error = true;
+                Log::channel('seller_microservice')->error('Falha na conexão com o Elasticsearch.');
             }
 
+            $this->error = false;
         } catch (NoNodeAvailableException $e) {
-            throw new Exception('Elasticsearch não está acessível: ' . $e->getMessage());
+            $this->error = true;
+            Log::channel('seller_microservice')->error('Elasticsearch não está acessível: ' . $e->getMessage());
         } catch (Exception $e) {
-            throw new Exception('Erro ao tentar conectar ao Elasticsearch: ' . $e->getMessage());
+            $this->error = true;
+            Log::channel('seller_microservice')->error('Erro ao tentar conectar ao Elasticsearch: ' . $e->getMessage());
         }
     }
 
@@ -39,6 +45,8 @@ class ElasticsearchService
      */
     public function createSalesIndex(): void
     {
+        if ($this->error === true) return;
+
         try {
             $params = [
                 'index' => 'sales',
@@ -61,6 +69,7 @@ class ElasticsearchService
             $this->client->indices()->create($params);
 
             Log::channel('seller_microservice')->info('index de venda criado com sucesso no elasticsearc!');
+
         } catch (TransportException $e) {
             Log::channel('seller_microservice')->error('Erro de transporte ao salvar indice de vendas no Elasticsearch: ' . $e->getMessage());
         } catch (NoNodeAvailableException $e) {
@@ -76,8 +85,10 @@ class ElasticsearchService
      * @param object $data
      * @return mixed
      */
-    public function saveToSalesIndex(object $data): bool
+    public function saveToSalesIndex(object $data): void
     {
+        if ($this->error === true) return;
+
         try {
             $params = [
                 'index' => 'sales',
@@ -94,17 +105,12 @@ class ElasticsearchService
             $this->client->index($params);
 
             Log::channel('seller_microservice')->info('venda no elasticsearc salvo com sucesso');
-
-            return true;
         } catch (TransportException $e) {
             Log::channel('seller_microservice')->error("Erro de transporte ao salvar venda no Elasticsearch: " . $e->getMessage());
-            return false;
         } catch (NoNodeAvailableException $e) {
             Log::channel('seller_microservice')->error("Não foi possível conectar ao Elasticsearch para salvar a venda: " . $e->getMessage());
-            return false;
         } catch (Exception $e) {
             Log::channel('seller_microservice')->error("Erro desconhecido ao salvar venda no Elasticsearch: " . $e->getMessage());
-            return false;
         }
     }
 
@@ -122,6 +128,8 @@ class ElasticsearchService
 
     public function fetchAllSales(): array
     {
+        if ($this->error === true) return [];
+
         try {
 
             $params = [

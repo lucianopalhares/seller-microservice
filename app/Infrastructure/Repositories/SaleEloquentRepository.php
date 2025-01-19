@@ -50,14 +50,8 @@ class SaleEloquentRepository implements SaleRepository
      */
     private function indexToElasticsearch(object $data): void
     {
-        try {
-            $elasticsearchService = new ElasticsearchService();
-            $elasticsearchService->saveToSalesIndex($data);
-
-            Log::channel('seller_microservice')->info('vendas salvo no elasticsearch', (array) $data);
-        } catch (\Exception $e) {
-            Log::channel('seller_microservice')->error($e->getMessage(), (array) $data);
-        }
+        $elasticsearchService = new ElasticsearchService();
+        $elasticsearchService->saveToSalesIndex($data);
     }
 
     /**
@@ -93,7 +87,14 @@ class SaleEloquentRepository implements SaleRepository
     public function findAll(): array
     {
         return SaleEloquentModel::all()->map(function ($sale) {
-            return new Sale($sale->id, $sale->seller, $sale->sale_value, $sale->sale_commission, $sale->created_at);
+            $eloquentSeller = $sale->seller;
+
+            $seller = new Seller(
+                $eloquentSeller->id,
+                $eloquentSeller->name,
+                $eloquentSeller->email
+            );
+            return new Sale($sale->id, $seller, $sale->sale_value, $sale->sale_commission, $sale->created_at);
         })->toArray();
     }
 }

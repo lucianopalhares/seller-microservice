@@ -24,5 +24,6 @@ Route::middleware([JwtMiddleware::class])->group(function () {
     });
 
     Route::get('/sales-all', [SalesController::class, 'getAllSales']);
+    Route::get('/sales-elastic', [SalesController::class, 'fetchAllSalesFromElastic']);
 });
 

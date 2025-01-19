@@ -79,6 +79,9 @@ http://localhost:5603/app/management/data/index_management/indices
 
 http://localhost:15672/#/queues
 
+- usuario = user
+- senha = password
+
 ### mysql
 
 - usuario = root

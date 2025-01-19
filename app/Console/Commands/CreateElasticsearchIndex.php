@@ -39,14 +39,7 @@ class CreateElasticsearchIndex extends Command
      */
     public function handle()
     {
-        try {
-            $elasticsearchService = new ElasticsearchService();
-            $elasticsearchService->createSalesIndex();
-
-            $this->info('Index de vendas criado no elasticsearch');
-        } catch (\Exception $e) {
-            $this->info('Erro elasticsearch: ' . $e->getMessage());
-            Log::channel('seller_microservice')->error($e->getMessage());
-        }
+        $elasticsearchService = new ElasticsearchService();
+        $elasticsearchService->createSalesIndex();
     }
 }

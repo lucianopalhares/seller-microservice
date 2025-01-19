@@ -198,21 +198,31 @@ class SaleService
      * Obtém todas as vendas do Elasticsearch.
      *
      * @return bool
-     * @throws \Exception
      */
     public function fetchAllSales(): bool
     {
         try {
+            $sales = $this->saleRepository->findAll();
 
-            $elasticsearchService = new ElasticsearchService();
-            $data = $elasticsearchService->fetchAllSales();
-
-            $this->setSales($data);
+            $this->setSales($sales);
 
             return true;
         } catch (\Exception $e) {
             Log::channel('seller_microservice')->error($e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Obtém todas as vendas do Elasticsearch.
+     *
+     * @return void
+     */
+    public function fetchAllSalesFromElastic(): void
+    {
+        $elasticsearchService = new ElasticsearchService();
+        $data = $elasticsearchService->fetchAllSales();
+
+        $this->setSales($data);
     }
 }
