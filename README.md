@@ -49,7 +49,7 @@ php artisan elasticsearch:create-index
 
 ### documentação da api de microserviços
 
-http://localhost:8089
+http://localhost:8000/docs/api
 
 ### Como usar
 
