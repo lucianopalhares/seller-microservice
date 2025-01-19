@@ -94,6 +94,16 @@ services:
       - laravel_network
     #command: ["bash", "/init_rabbitmq.sh"]
 
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "8026:8025"
+      - "1025:1025"
+    expose:
+      - 8025
+    networks:
+      - laravel_network
+
 networks:
   laravel_network:
     driver: bridge

@@ -71,6 +71,10 @@ rabbitmqadmin -u user -p password publish exchange=email_sales_events routing_ke
 
 http://localhost:8000/api/sales-all
 
+#### servidor de recebimento de email (relatorio de vendas)
+
+http://localhost:8026/
+
 #### url kibana (logs do elasticsearch)
 
 http://localhost:5603/app/management/data/index_management/indices

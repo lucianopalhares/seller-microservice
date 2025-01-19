@@ -32,7 +32,7 @@ class SendEmailSales extends Mailable
      */
     public function build()
     {
-        return $this->subject('Sales Report')
+        return $this->subject('Relatório diário de vendas')
                     ->view('emails.sales')
                     ->with('sales', $this->sales);
     }
