@@ -30,5 +30,5 @@ interface SaleRepository
      *
      * @return array Retorna uma lista com todas as vendas.
      */
-    public function findAll(): array;
+    public function getSalesOfTheDay(): array;
 }

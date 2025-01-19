@@ -195,24 +195,34 @@ class SaleService
     }
 
     /**
-     * Obtém todas as vendas do Elasticsearch.
+     * Obtém todas as vendas do dia.
      *
      * @return bool
-     * @throws \Exception
      */
-    public function fetchAllSales(): bool
+    public function getSalesOfTheDay(): bool
     {
         try {
+            $sales = $this->saleRepository->getSalesOfTheDay();
 
-            $elasticsearchService = new ElasticsearchService();
-            $data = $elasticsearchService->fetchAllSales();
-
-            $this->setSales($data);
+            $this->setSales($sales);
 
             return true;
         } catch (\Exception $e) {
             Log::channel('seller_microservice')->error($e->getMessage());
             return false;
         }
+    }
+
+    /**
+     * Obtém todas as vendas do Elasticsearch.
+     *
+     * @return void
+     */
+    public function fetchAllSalesFromElastic(): void
+    {
+        $elasticsearchService = new ElasticsearchService();
+        $data = $elasticsearchService->fetchAllSales();
+
+        $this->setSales($data);
     }
 }

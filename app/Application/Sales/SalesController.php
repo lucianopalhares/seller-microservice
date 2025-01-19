@@ -10,7 +10,6 @@ use App\Http\Requests\SaleRequest;
 use App\Http\Resources\SaleResource;
 use Illuminate\Http\JsonResponse;
 use App\Services\ResponseService;
-use App\Domain\Sales\Sale;
 
 /**
  * Controlador responsável por gerenciar vendas.
@@ -102,19 +101,43 @@ class SalesController extends Controller
     }
 
     /**
+     * Obter todas as vendas do dia.
+     *
+     * @param int $sellerId
+     * @return JsonResponse
+     * @throws CustomException
+     */
+    public function getSalesOfTheDay(): JsonResponse
+    {
+        try {
+            $this->saleService->getSalesOfTheDay();
+
+            if ($this->saleService->errorExists())
+                throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->saleService->getError());
+
+            $sales = $this->saleService->getSales();
+
+            if (count($sales) === 0) {
+                return ResponseService::responseJson(StatusCodeEnum::NO_CONTENT);
+            }
+
+            return ResponseService::responseJson(StatusCodeEnum::OK, SaleResource::collection($sales));
+        } catch (CustomException $e) {
+            return ResponseService::responseJsonError($e);
+        }
+    }
+
+    /**
      * Obter todas as vendas do elasticsearch.
      *
      * @param int $sellerId
      * @return JsonResponse
      * @throws CustomException
      */
-    public function getAllSales(): JsonResponse
+    public function fetchAllSalesFromElastic(): JsonResponse
     {
         try {
-            $response = $this->saleService->fetchAllSales();
-
-            if ($response == false)
-                return ResponseService::responseJson(StatusCodeEnum::NO_CONTENT);
+            $this->saleService->fetchAllSalesFromElastic();
 
             if ($this->saleService->errorExists())
                 throw new CustomException(StatusCodeEnum::BAD_REQUEST, $this->saleService->getError());

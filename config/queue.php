@@ -72,6 +72,19 @@ return [
             'after_commit' => false,
         ],
 
+        'rabbitmq' => [
+            'driver' => 'rabbitmq',
+            'host' => env('RABBITMQ_HOST', 'localhost'),
+            'port' => env('RABBITMQ_PORT', 5672),
+            'user' => env('RABBITMQ_USER', 'user'),
+            'password' => env('RABBITMQ_PASSWORD', 'password'),
+            'vhost' => env('RABBITMQ_VHOST', '/'),
+            'queue' => env('RABBITMQ_QUEUE', 'emails'),
+            'exchange' => 'emails',
+            'exchange_type' => 'direct',
+            'routing_key' => 'emails',
+        ],
+
     ],
 
     /*

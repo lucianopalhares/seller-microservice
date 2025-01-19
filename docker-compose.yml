@@ -79,6 +79,31 @@ services:
     depends_on:
       - elasticsearch
 
+  rabbitmq:
+    image: "rabbitmq:3-management"
+    container_name: seller_tray_rabbitmq
+    environment:
+      RABBITMQ_DEFAULT_USER: user
+      RABBITMQ_DEFAULT_PASS: password
+    ports:
+      - "15672:15672"
+      - "5672:5672"
+    volumes:
+      - ./init_rabbitmq.sh:/init_rabbitmq.sh
+    networks:
+      - laravel_network
+    #command: ["bash", "/init_rabbitmq.sh"]
+
+  mailhog:
+    image: mailhog/mailhog
+    ports:
+      - "8026:8025"
+      - "1025:1025"
+    expose:
+      - 8025
+    networks:
+      - laravel_network
+
 networks:
   laravel_network:
     driver: bridge

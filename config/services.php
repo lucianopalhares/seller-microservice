@@ -35,4 +35,16 @@ return [
         ],
     ],
 
+    'rabbitmq' => [
+        'host' => env('RABBITMQ_HOST', 'seller_tray_rabbitmq'),
+        'port' => env('RABBITMQ_PORT', '5672'),
+        'user' => env('RABBITMQ_USER', 'user'),
+        'password' => env('RABBITMQ_PASSWORD', 'password'),
+        'queue' => env('RABBITMQ_QUEUE', 'sale_queue'),
+        'exchange' => env('RABBITMQ_EXCHANGE', 'sale_exchange'),
+        'bind' => env('RABBITMQ_BIND', 'sale_bind'),
+        'vhost' => env('RABBITMQ_VHOST', '/'),
+        'email_report_sales' => env('RABBITMQ_EMAIL_REPORT_SALES', '/'),
+    ],
+
 ];

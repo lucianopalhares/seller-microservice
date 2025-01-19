@@ -50,14 +50,8 @@ class SaleEloquentRepository implements SaleRepository
      */
     private function indexToElasticsearch(object $data): void
     {
-        try {
-            $elasticsearchService = new ElasticsearchService();
-            $elasticsearchService->saveToSalesIndex($data);
-
-            Log::channel('seller_microservice')->info('vendas salvo no elasticsearch', (array) $data);
-        } catch (\Exception $e) {
-            Log::channel('seller_microservice')->error($e->getMessage(), (array) $data);
-        }
+        $elasticsearchService = new ElasticsearchService();
+        $elasticsearchService->saveToSalesIndex($data);
     }
 
     /**
@@ -90,10 +84,22 @@ class SaleEloquentRepository implements SaleRepository
      *
      * @return array Uma lista de objetos Sale representando todas as vendas.
      */
-    public function findAll(): array
+    public function getSalesOfTheDay(): array
     {
-        return SaleEloquentModel::all()->map(function ($sale) {
-            return new Sale($sale->id, $sale->seller, $sale->sale_value, $sale->sale_commission, $sale->created_at);
+        $startOfDay = \Carbon\Carbon::today();
+        $endOfDay = \Carbon\Carbon::now();
+
+        return SaleEloquentModel::where('enqueued', false)
+            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+            ->get()->map(function ($sale) {
+                $eloquentSeller = $sale->seller;
+
+                $seller = new Seller(
+                    $eloquentSeller->id,
+                    $eloquentSeller->name,
+                    $eloquentSeller->email
+                );
+                return new Sale($sale->id, $seller, $sale->sale_value, $sale->sale_commission, $sale->created_at);
         })->toArray();
     }
 }
