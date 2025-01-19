@@ -13,16 +13,27 @@ class SendEmailSales extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public $emailData;
+    public $sales;
 
-    public function __construct($emailData)
+    /**
+     * Create a new message instance.
+     *
+     * @param array $sales
+     */
+    public function __construct(array $sales)
     {
-        $this->emailData = $emailData;
+        $this->sales = $sales;
     }
 
+    /**
+     * Build the message.
+     *
+     * @return $this
+     */
     public function build()
     {
-        return $this->view('emails.sales')
-                    ->with('data', $this->emailData);
+        return $this->subject('Sales Report')
+                    ->view('emails.sales')
+                    ->with('sales', $this->sales);
     }
 }

@@ -6,6 +6,7 @@ use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use Exception;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Config;
 
 /**
  * Serviço para integração com RabbitMQ.
@@ -34,10 +35,10 @@ class RabbitMQService
     public function __construct()
     {
         try {
-            $host = env('RABBITMQ_HOST', 'seller_tray_rabbitmq');
-            $port = env('RABBITMQ_PORT', 15672);
-            $user = env('RABBITMQ_USER', 'user');
-            $password = env('RABBITMQ_PASSWORD', 'password');
+            $host = Config::get('services.rabbitmq.host');
+            $port = Config::get('services.rabbitmq.port');
+            $user = Config::get('services.rabbitmq.user');
+            $password = Config::get('services.rabbitmq.password');
 
             $this->connection = new AMQPStreamConnection($host, $port, $user, $password);
 

@@ -6,8 +6,9 @@ use Illuminate\Console\Command;
 use App\Services\RabbitMQService;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\DB;
 use App\Application\Sales\Services\SaleService;
+use Illuminate\Support\Facades\Config;
+use App\Mail\SendEmailSales;
 
 /**
  * Comando para consumir mensagens da fila RabbitMQ e enviar e-mails formatados.
@@ -55,10 +56,14 @@ class ConsumeSalesAndSendEmail extends Command
     {
         try {
 
-                       // Declarar a exchange, fila e bind no RabbitMQ, sem causar erro se já existirem
-            $this->rabbitMQService->declareExchangeQueueBind(env('RABBITMQ_EXCHANGE'), env('RABBITMQ_QUEUE'), env('RABBITMQ_BIND'));
+            $exchange = Config::get('services.rabbitmq.exchange');
+            $queue = Config::get('services.rabbitmq.queue');
+            $bind = Config::get('services.rabbitmq.bind');
 
-            $this->rabbitMQService->consumeMessage(env('RABBITMQ_QUEUE'), function ($message) {
+                       // Declarar a exchange, fila e bind no RabbitMQ, sem causar erro se já existirem
+            $this->rabbitMQService->declareExchangeQueueBind($exchange, $queue, $bind);
+
+            $this->rabbitMQService->consumeMessage($queue, function ($message) {
                 $sales = json_decode($message->body, true);
 
                 if (!$sales) {
@@ -67,18 +72,8 @@ class ConsumeSalesAndSendEmail extends Command
                 }
 
                 try {
-
-                    print_r($sales);
-                    /*
-                    Mail::send('emails.sales', ['sale' => $sale], function ($email) use ($sale) {
-                        $email->to('email@example.com')
-                              ->subject('Registro de Venda #' . $sale['id']);
-                    });
-
-                    DB::table('sales')
-                        ->where('id', $sale['id'])
-                        ->update(['notified' => 1]);
-                        */
+                    $email = Config::get('services.rabbitmq.email_report_sales');
+                    Mail::to($email)->send(new SendEmailSales($sales));
 
                 } catch (\Exception $e) {
                     Log::channel('seller_microservice')->error('Erro ao consumir vendas do rabitMQ', ['message' => $e->getMessage()] );

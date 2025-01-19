@@ -4,6 +4,7 @@
 namespace App\Http\Controllers;
 
 use App\Application\Sales\Services\SaleService;
+use App\Http\Resources\SaleResource;
 
 class HomeController extends Controller
 {
@@ -29,9 +30,10 @@ class HomeController extends Controller
 
         foreach ($sales as $sale) {
             try {
-                $sales2[] = [
+                $sale333 = new SaleResource($sale);
+                $array = $sale333->toArray(request());
+                $sales2[] = $array;
 
-                ];
             } catch (\Exception $e) {
                 // Registrar erro específico ao publicar a mensagem
                 echo 'erro2';

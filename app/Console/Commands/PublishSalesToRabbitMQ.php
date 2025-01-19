@@ -6,6 +6,8 @@ use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Log;
 use App\Application\Sales\Services\SaleService;
 use App\Services\RabbitMQService;
+use App\Http\Resources\SaleResource;
+use Illuminate\Support\Facades\Config;
 
 class PublishSalesToRabbitMQ extends Command
 {
@@ -36,19 +38,23 @@ class PublishSalesToRabbitMQ extends Command
             // Buscar todas as vendas usando o serviço
             $saleService->fetchAllSales();
 
-            $sales = $saleService->getSales();
+            $items = $saleService->getSales();
 
-            if (empty($sales)) {
+
+
+            if (empty($items)) {
                 $this->warn('Nenhuma venda encontrada para publicar.');
                 return;
             }
 
             $sales = [];
 
-            foreach ($sales as $sale) {
+            foreach ($items as $item) {
                 try {
-                    print_r( get_object_vars($sale));
-                    $sales[] = get_object_vars($sale);
+                    print_r($item);
+                    $sale = new SaleResource($item);
+                    $array = $sale->toArray(request());
+                    $sales[] = $array;
                 } catch (\Exception $e) {
                     // Registrar erro específico ao publicar a mensagem
                     Log::error('Erro ao publicar venda no RabbitMQ', [
@@ -58,9 +64,13 @@ class PublishSalesToRabbitMQ extends Command
                 }
             }
 
+            print_r($sales);
+
             $message = json_encode($sales);
 
-            $this->rabbitMQService->publishMessage(env('RABBITMQ_QUEUE'), $message);
+            $queue = Config::get('services.rabbitmq.queue');
+
+            $this->rabbitMQService->publishMessage($queue, $message);
 
             $this->info('Registros de vendas publicados no RabbitMQ com sucesso.');
 
