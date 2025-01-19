@@ -1,24 +1,27 @@
 <?php
 
-// app/Http/Controllers/HomeController.php
-namespace App\Http\Controllers;
+namespace Tests\Unit;
 
+use PHPUnit\Framework\TestCase;
 use App\Application\Sales\Services\SaleService;
 
-class HomeController extends Controller
+class GetSalesControllerTest extends TestCase
 {
-    /**
-     * Exibe a página inicial.
-     *
-     * @return \Illuminate\View\View
-     */
-    public function index(SaleService $saleService)
+    public $saleService;
+
+    public function __construct(SaleService $saleService)
     {
-        //return view('welcome');
+        $this->saleService = $saleService;
+    }
 
-        $saleService->fetchAllSales();
+    /**
+     * A basic unit test example.
+     */
+    public function testSales(): void
+    {
+        $this->saleService->fetchAllSales();
 
-        $sales = $saleService->getSales();
+        $sales = $this->saleService->getSales();
 
         if (empty($sales)) {
             echo 'erro';
@@ -30,7 +33,7 @@ class HomeController extends Controller
         foreach ($sales as $sale) {
             try {
                 $sales2[] = [
-
+                    'id' => $sale->id
                 ];
             } catch (\Exception $e) {
                 // Registrar erro específico ao publicar a mensagem
