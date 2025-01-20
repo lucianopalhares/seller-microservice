@@ -8,6 +8,8 @@ Artisan::command('inspire', function () {
     $this->comment(Inspiring::quote());
 })->purpose('Display an inspiring quote')->hourly();
 
-Schedule::command('sales:publish')->everyTenSeconds();
-Schedule::command('sales:consume');
+// envia as vendas vendas do dia para a fila à meia noite
+Schedule::command('sales:publish')->daily();
 
+// descomente a linha a seguir se quiser testar o envio de vendas a cada 10 segundos
+//Schedule::command('sales:publish')->everyTenSeconds();

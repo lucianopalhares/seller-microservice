@@ -56,15 +56,20 @@ http://localhost:8000/docs/api
 #### crie um usuário pela api
 
 ```
-POST http://localhost:8000/api/register
-
+POST
+```
+```
+http://localhost:8000/api/register
+```
+```
 {
     "name": "John Doe",
     "email": "john@example.com",
     "password": "password",
     "password_confirmation": "password"
 }
-
+```
+```
 a conta do usuário sera criada
 e um token de acesso sera gerado
 ```
@@ -76,8 +81,12 @@ e um token de acesso sera gerado
 ```
 use o token no BeaterToken do authorization
 
-POST http://localhost:8000/api/sellers
-
+POST
+```
+```
+http://localhost:8000/api/sellers
+```
+```
 {
     "name": "fabio",
     "email": "fabio@test.com"
@@ -89,8 +98,12 @@ POST http://localhost:8000/api/sellers
 ```
 use o token no BeaterToken do authorization
 
-POST http://localhost:8000/api/sales
-
+POST
+```
+```
+http://localhost:8000/api/sales
+```
+```
 {
     "seller_id": 1,
     "sale_value": 40.99
@@ -102,7 +115,10 @@ POST http://localhost:8000/api/sales
 ```
 use o token no BeaterToken do authorization
 
-GET http://localhost:8000/api/sellers
+GET
+```
+```
+http://localhost:8000/api/sellers
 ```
 
 #### listar as vendas de um vendedor
@@ -110,7 +126,9 @@ GET http://localhost:8000/api/sellers
 ```
 use o token no BeaterToken do authorization
 
-GET http://localhost:8000/api/sales/1
+GET
+```
+http://localhost:8000/api/sales/1
 ```
 
 #### se o token expirar, logar novamente
@@ -118,14 +136,71 @@ GET http://localhost:8000/api/sales/1
 ```
 use o token no BeaterToken do authorization
 
-POST http://localhost:8000/api/login
-
+POST
+```
+```
+http://localhost:8000/api/login
+```
+```
 {
     "name": "fabio",
     "email": "fabio@test.com"
 }
-
+```
+```
 um novo token sera gerado
+```
+
+### Relatório de vendas
+
+#### acesse esta url para checar o email recebido com o relatório:
+
+http://localhost:8026
+
+#### recebimento do email (deve haver vendas fechadas no dia)
+
+- foi configurado para recebimento das vendas do dia todos os dias à meia-noite
+
+#### receber email imediatamente para fins de teste
+
+- entre no container da aplicação:
+
+```
+docker exec -it seller_tray_app bash
+```
+
+- execute o comando para enviar as vendas para a fila:
+
+```
+php artisan sales:publish
+```
+
+- voce deve receber o email imediatamente
+
+#### alterar o horario de recebimento de email
+
+- se quiser adicionar mais um horário para recebimento de email
+
+- entre no seguinte arquivo e siga as instruções contidas nele, descomentando uma linha especifica:
+
+```
+routes/console.php
+```
+
+- descomente o trecho:
+
+```
+//Schedule::command('sales:publish')->everyTenSeconds();
+```
+
+- reinicie o container:
+
+```
+docker-compose down
+```
+
+```
+docker-compose up -d
 ```
 
 ### Acesso
