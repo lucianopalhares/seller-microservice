@@ -11,5 +11,5 @@ Artisan::command('inspire', function () {
 // envia as vendas vendas do dia para a fila à meia noite
 Schedule::command('sales:publish')->daily();
 
-// descomente a linha a seguir se quiser testar o envio de vendas a cada 10 segundos
+// descomente a linha a seguir se quiser receber o email de vendas a cada 10 segundos
 //Schedule::command('sales:publish')->everyTenSeconds();

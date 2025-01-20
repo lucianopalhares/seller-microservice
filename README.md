@@ -120,9 +120,7 @@ http://localhost:8000/api/sellers
 
 metodo: GET
 authorization: BearerToken (use o token gerado)
-url: http://localhost:8000/api/sales/ID_DO_VENDEDOR
-
-url exemplo:
+url (troque o 1 pelo id do vendedor):
 ```
 http://localhost:8000/api/sales/1
 ```
@@ -197,21 +195,27 @@ docker-compose down
 docker-compose up -d
 ```
 
+- voce deve receber o email em ate 30 segundos
+
 ### Acesso
 
 #### url da aplicação de microserviços
 
-http://localhost:8000/api/sales-all
+http://localhost:8000/
 
 #### servidor de recebimento de email (relatorio de vendas)
 
 http://localhost:8026/
 
+#### log de todas as vendas no elasticsearch
+
+http://localhost:8000/api/sales-elastic
+
 #### url kibana (logs do elasticsearch)
 
 http://localhost:5603/app/management/data/index_management/indices
 
-#### url rabitMq (filas)
+#### url RabitMQ (filas)
 
 http://localhost:15672/#/queues
 
