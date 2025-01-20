@@ -7,7 +7,7 @@ use App\Domain\Sellers\Seller;
 use App\Domain\Sales\SaleRepository;
 use App\Infrastructure\Eloquent\SaleEloquentModel;
 use App\Services\ElasticsearchService;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Redis;
 
 /**
  * Repositório de Vendas Eloquent
@@ -65,16 +65,61 @@ class SaleEloquentRepository implements SaleRepository
      */
     public function findBySeller(int $sellerId): array
     {
-        return SaleEloquentModel::where('seller_id', $sellerId)->get()->map(function ($sale) {
-            $eloquentSeller = $sale->seller;
+        // Define a chave de cache
+        $cacheKey = 'sales_by_seller_' . $sellerId;
+        $cacheData = Redis::get($cacheKey);
 
-            $seller = new Seller(
-                $eloquentSeller->id,
-                $eloquentSeller->name,
-                $eloquentSeller->email
-            );
-            return new Sale($sale->id, $seller, $sale->sale_value, $sale->sale_commission, $sale->created_at);
-        })->toArray();
+        // Se os dados estiverem no Redis
+        if ($cacheData) {
+            // Deserializa os dados para obter os objetos novamente
+            $cachedData = unserialize($cacheData);
+            $sales = $cachedData['sales'];
+            $lastCachedAt = $cachedData['cached_at'];
+
+            // Busca vendas no banco de dados a partir da data do último cache
+            $newSales = SaleEloquentModel::where('seller_id', $sellerId)
+                ->orderBy('created_at', 'desc')
+                ->where('created_at', '>', $lastCachedAt)
+                ->get()
+                ->map(function ($sale) {
+                    $eloquentSeller = $sale->seller;
+                    $seller = new Seller($eloquentSeller->id, $eloquentSeller->name, $eloquentSeller->email);
+                    return new Sale($sale->id, $seller, $sale->sale_value, $sale->sale_commission, $sale->created_at);
+                })->toArray();
+
+            // Mescla as vendas existentes com as novas
+            $sales = array_merge($sales, $newSales);
+
+            if (count($sales) > 0) {
+                $sale = $sales[0];
+                Redis::setex($cacheKey, 3600, serialize([
+                    'sales' => $sales,
+                    'cached_at' => $sale->getSaleDate()
+                ]));
+            }
+
+        } else {
+            // Se não houver cache, faz a consulta normal ao banco de dados
+            $sales = SaleEloquentModel::where('seller_id', $sellerId)
+                ->orderBy('created_at', 'desc')
+                ->get()
+                ->map(function ($sale) {
+                    $eloquentSeller = $sale->seller;
+                    $seller = new Seller($eloquentSeller->id, $eloquentSeller->name, $eloquentSeller->email);
+                    return new Sale($sale->id, $seller, $sale->sale_value, $sale->sale_commission, $sale->created_at);
+                })
+                ->toArray();
+
+            if (count($sales) > 0) {
+                $sale = $sales[0];
+                Redis::setex($cacheKey, 3600, serialize([
+                    'sales' => $sales,
+                    'cached_at' => $sale->getSaleDate()
+                ]));
+            }
+        }
+
+        return $sales;
     }
 
     /**

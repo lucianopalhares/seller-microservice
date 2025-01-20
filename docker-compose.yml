@@ -10,6 +10,7 @@ services:
       - laravel_network
     depends_on:
       - mysql
+      - redis
     ports:
       - "5173:5173"
     mem_limit: 2g
@@ -92,7 +93,6 @@ services:
       - ./init_rabbitmq.sh:/init_rabbitmq.sh
     networks:
       - laravel_network
-    #command: ["bash", "/init_rabbitmq.sh"]
 
   mailhog:
     image: mailhog/mailhog
@@ -101,6 +101,16 @@ services:
       - "1025:1025"
     expose:
       - 8025
+    networks:
+      - laravel_network
+
+  redis:
+    image: redis:alpine
+    container_name: seller_tray_redis
+    ports:
+      - "6388:6379"
+    expose:
+      - 6388
     networks:
       - laravel_network
 
