@@ -15,6 +15,28 @@ API para gestão de vendas, vendedores e cálculo de comissão das vendas (a com
 
 Ao final de cada dia é enviado um email com um relatório com a soma de todas as vendas efetuadas no dia.
 
+### Tecnologias usadas:
+
+* microserviço com as melhores práticas de design patterns
+* fila com RabitMQ
+* observabilidade com Sentry
+* cache com Redis
+* banco de dados Mysql
+* logs com Elasticsearch e Kibana
+
+### Como funciona:
+
+* Serviço automaticamente agendado para diariamente meia-noite pegar todas vendas do dia e publicar na fila do RabitMQ
+* RabitMQ consome a fila de vendas escutando o recebimento destas vendas que foram publicadas, e realiza envio de email como relatório de vendas
+* cada venda criada é registrada no Elasticsearch para consulta de logs
+* cache de vendas:
+    - ao buscar as vendas de um vendedor, é buscado do banco de dados mysql e são armazenadas no cache com o Redis
+    - a proxima consulta ira pegar as vendas não mais do banco, mas do Redis
+    - mais uma consulta é feita no banco de dados mysql, mas buscando vendas a partir da ultima venda registrada anteriormente no redis
+    - as vendas retornadas do banco é mesclada com as vendas ja existente no Redis
+    - aliviando o banco de dados de consultas repetidas
+    - o cache de vendas tem duração de 1 hora
+
 ### Instalação
 
 #### entre na aplicação laravel
@@ -188,17 +210,50 @@ docker-compose restart
 
 ### Observabilidade (sentry)
 
-#### crie uma conta ou faça login da url da sentry
+#### opção 1 = acesse a consta sentry pre-configurada
+
+- acesse o site da sentry:
 
 https://sentry.io/welcome/
 
-#### altere a chave de autenticação no sentry
+- digite o login e senha:
 
-- no .env insira sua chave do sentry
+usuario:
+```
+xebok35047@fundapk.com
+```
+senha:
+```
+dK54865*hh
+```
+
+- acesse a seguinte url da sentry para acompanhar os erros:
+
+https://test-dby.sentry.io/issues/?referrer=sidebar
+
+#### opção 2 = crie uma conta na sentry
+
+- acesse o site da sentry, se registre e faça login
+
+https://sentry.io/welcome/
+
+- obtenha a chave de autenticação
+
+- insira no seu .env da aplicação a chave de autenticação da sentry
 
 ```
 SENTRY_LARAVEL_DSN=<sua_chave>
 ```
+
+- reinicie a aplicacao
+
+```
+docker-compose restart
+```
+
+- acesse a seguinte url da sentry para acompanhar os erros:
+
+https://test-dby.sentry.io/issues/?referrer=sidebar
 
 #### acesse o painel do sentry para monitorar os erros
 
