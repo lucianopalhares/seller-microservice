@@ -55,29 +55,36 @@ http://localhost:8000/docs/api
 
 #### crie um usuário pela api
 
+metodo: POST
+url:
 ```
-POST http://localhost:8000/api/register
-
+http://localhost:8000/api/register
+```
+body:
+```
 {
     "name": "John Doe",
     "email": "john@example.com",
     "password": "password",
     "password_confirmation": "password"
 }
+```
 
 a conta do usuário sera criada
 e um token de acesso sera gerado
-```
 
 #### utilize o token para as proximas etapas
 
 #### crie um vendedor
 
+metodo: POST
+authorization: BearerToken (use o token gerado)
+url:
 ```
-use o token no BeaterToken do authorization
-
-POST http://localhost:8000/api/sellers
-
+http://localhost:8000/api/sellers
+```
+body:
+```
 {
     "name": "fabio",
     "email": "fabio@test.com"
@@ -86,11 +93,14 @@ POST http://localhost:8000/api/sellers
 
 #### crie uma venda
 
+metodo: POST
+authorization: BearerToken (use o token gerado)
+url:
 ```
-use o token no BeaterToken do authorization
-
-POST http://localhost:8000/api/sales
-
+http://localhost:8000/api/sales
+```
+body:
+```
 {
     "seller_id": 1,
     "sale_value": 40.99
@@ -99,57 +109,109 @@ POST http://localhost:8000/api/sales
 
 #### listar os vendedores
 
+metodo: GET
+authorization: BearerToken (use o token gerado)
+url:
 ```
-use o token no BeaterToken do authorization
-
-GET http://localhost:8000/api/sellers
+http://localhost:8000/api/sellers
 ```
 
 #### listar as vendas de um vendedor
 
+metodo: GET
+authorization: BearerToken (use o token gerado)
+url (troque o 1 pelo id do vendedor):
 ```
-use o token no BeaterToken do authorization
-
-GET http://localhost:8000/api/sales/1
+http://localhost:8000/api/sales/1
 ```
 
 #### se o token expirar, logar novamente
 
+um novo token sera gerado para usar novamente
+
+metodo: POST
+authorization: BearerToken (use o token gerado)
+url:
 ```
-use o token no BeaterToken do authorization
-
-POST http://localhost:8000/api/login
-
+http://localhost:8000/api/login
+```
+body:
+```
 {
     "name": "fabio",
     "email": "fabio@test.com"
 }
-
-um novo token sera gerado
 ```
+
+### Receber email com Relatório de vendas
+
+#### acesse esta url para acompanhar os emails recebidos com o relatório de vendas:
+
+http://localhost:8026
+
+#### horário do recebimento do email
+
+- foi configurado para recebimento das vendas do dia todos os dias à meia-noite
+- deve haver vendas fechadas no dia para o email ser recebido
+
+#### receber email imediatamente
+
+- execute o seguinte comando:
+
+```
+docker exec -it seller_tray_app bash -c "php artisan sales:publish"
+```
+
+- voce deve receber o email imediatamente
+
+#### alterar o horario de recebimento de email (a cada 10 segundos)
+
+- entre no seguinte arquivo e siga as instruções contidas nele, descomentando uma linha especifica:
+
+```
+routes/console.php
+```
+
+- descomente o trecho:
+
+```
+//Schedule::command('sales:publish')->everyTenSeconds();
+```
+
+- reinicie o container:
+
+```
+docker-compose restart
+```
+
+- voce deve receber o email em ate 30 segundos
 
 ### Acesso
 
 #### url da aplicação de microserviços
 
-http://localhost:8000/api/sales-all
+http://localhost:8000/
 
 #### servidor de recebimento de email (relatorio de vendas)
 
 http://localhost:8026/
 
+#### log de todas as vendas no elasticsearch
+
+http://localhost:8000/api/sales-elastic
+
 #### url kibana (logs do elasticsearch)
 
 http://localhost:5603/app/management/data/index_management/indices
 
-#### url rabitMq (filas)
+#### url RabitMQ (filas)
 
 http://localhost:15672/#/queues
 
 - usuario = user
 - senha = password
 
-### mysql
+#### banco de dados (mysql)
 
 - usuario = root
 - senha = root

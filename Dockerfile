@@ -16,7 +16,9 @@ RUN apt-get update && apt-get install -y \
     iputils-ping \
     wget \
     iproute2 \
-    netcat-openbsd  # Adiciona o netcat-openbsd
+    netcat-openbsd \
+    cron \
+    nano
 
 # Instalação das extensões PHP necessárias
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd sockets
@@ -50,7 +52,18 @@ RUN echo "xdebug.mode=debug\n\
     xdebug.log=/var/log/xdebug.log\n\
     xdebug.max_nesting_level=256" > /usr/local/etc/php/conf.d/20-xdebug.ini
 
-# Esperar o Elasticsearch estar disponível antes de iniciar o PHP
-ENTRYPOINT ["sh", "-c", "while ! nc -z seller_tray_elasticsearch 9200; do sleep 1; done; echo 'Elasticsearch is ready!'; exec php-fpm"]
+# Copiar o arquivo de configuração cron para o contêiner
+COPY cronjob /etc/cron.d/schedule
+
+# Configurar permissões adequadas para o cronjob
+RUN chmod 0644 /etc/cron.d/schedule
+
+# Aplicar as permissões do cronjob para ser reconhecido pelo cron
+RUN crontab /etc/cron.d/schedule
+
+COPY entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+
+ENTRYPOINT ["/entrypoint.sh"]
 
 EXPOSE 9000
