@@ -15,6 +15,29 @@ API para gestão de vendas, vendedores e cálculo de comissão das vendas (a com
 
 Ao final de cada dia é enviado um email com um relatório com a soma de todas as vendas efetuadas no dia.
 
+### Tecnologias usadas:
+
+* microserviço com as melhores práticas de design patterns
+* fila com RabitMQ
+* observabilidade com Sentry
+* cache com Redis
+* banco de dados Mysql
+* logs com Elasticsearch e Kibana
+* documentação da api
+
+### Como funciona:
+
+* Serviço automaticamente agendado para diariamente meia-noite pegar todas vendas do dia e publicar na fila do RabitMQ
+* RabitMQ consome a fila de vendas escutando o recebimento destas vendas que foram publicadas, e realiza envio de email como relatório de vendas
+* cada venda criada é registrada no Elasticsearch para consulta de logs
+* cache de vendas:
+    - ao buscar as vendas de um vendedor, é buscado do banco de dados mysql e são armazenadas no cache com o Redis
+    - a proxima consulta ira pegar as vendas não mais do banco, mas do Redis
+    - mais uma consulta é feita no banco de dados mysql, mas buscando vendas a partir da ultima venda registrada anteriormente no redis
+    - as vendas retornadas do banco é mesclada com as vendas ja existente no Redis
+    - aliviando o banco de dados de consultas repetidas
+    - o cache de vendas tem duração de 1 hora
+
 ### Instalação
 
 #### entre na aplicação laravel
@@ -47,11 +70,23 @@ php artisan migrate
 php artisan elasticsearch:create-index
 ```
 
-### documentação da api de microserviços
+#### saia do container
+
+```
+exit
+```
+
+#### reinicie a aplicação
+
+```
+docker-compose restart
+```
+
+### Documentação da api
 
 http://localhost:8000/docs/api
 
-### Como usar
+### Exemplo de Uso
 
 #### crie um usuário pela api
 
@@ -130,7 +165,6 @@ http://localhost:8000/api/sales/1
 um novo token sera gerado para usar novamente
 
 metodo: POST
-authorization: BearerToken (use o token gerado)
 url:
 ```
 http://localhost:8000/api/login
@@ -186,17 +220,65 @@ docker-compose restart
 
 - voce deve receber o email em ate 30 segundos
 
-### Acesso
+### Observabilidade - monitorar erros (sentry)
 
-#### url da aplicação de microserviços
+#### opção 1 = acesse a seguinte conta sentry pre-configurada
 
-http://localhost:8000/
+- acesse o site da sentry:
 
-#### servidor de recebimento de email (relatorio de vendas)
+https://sentry.io/welcome/
 
-http://localhost:8026/
+- digite o login e senha:
 
-#### log de todas as vendas no elasticsearch
+usuario:
+```
+xebok35047@fundapk.com
+```
+senha:
+```
+dK54865*hh
+```
+
+- acesse a seguinte url da sentry para acompanhar os erros:
+
+https://test-dby.sentry.io/issues/?referrer=sidebar
+
+#### opção 2 = crie uma conta na sentry
+
+- acesse o site da sentry, se registre e faça login
+
+https://sentry.io/welcome/
+
+- obtenha a chave de autenticação
+
+- insira no seu .env da aplicação a chave de autenticação da sentry
+
+```
+SENTRY_LARAVEL_DSN=<sua_chave>
+```
+
+- reinicie a aplicacao
+
+```
+docker-compose restart
+```
+
+- acesse a aba de erros no painel da sentry (issues)
+
+https://sentry.io/welcome/
+
+### Fila (RabitMQ)
+
+#### url
+
+http://localhost:15672/#/queues
+
+- usuario = user
+- senha = password
+
+### Logs
+
+#### buscar todas vendas registradas (elasticsearch)
 
 http://localhost:8000/api/sales-elastic
 
@@ -204,14 +286,15 @@ http://localhost:8000/api/sales-elastic
 
 http://localhost:5603/app/management/data/index_management/indices
 
-#### url RabitMQ (filas)
+### Servidor de Email
 
-http://localhost:15672/#/queues
+#### servidor de recebimento de email (relatorio de vendas)
 
-- usuario = user
-- senha = password
+http://localhost:8026/
 
-#### banco de dados (mysql)
+### Banco de dados (mysql)
+
+#### acesso
 
 - usuario = root
 - senha = root

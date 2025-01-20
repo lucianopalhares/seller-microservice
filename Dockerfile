@@ -23,6 +23,8 @@ RUN apt-get update && apt-get install -y \
 # Instalação das extensões PHP necessárias
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd sockets
 
+RUN pecl install redis && docker-php-ext-enable redis
+
 # Instalação do Xdebug
 RUN pecl install xdebug \
     && docker-php-ext-enable xdebug
