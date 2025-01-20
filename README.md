@@ -143,35 +143,28 @@ body:
 }
 ```
 
-### Relatório de vendas
+### Receber email com Relatório de vendas
 
-#### acesse esta url para checar o email recebido com o relatório:
+#### acesse esta url para acompanhar os emails recebidos com o relatório de vendas:
 
 http://localhost:8026
 
-#### recebimento do email (deve haver vendas fechadas no dia)
+#### horário do recebimento do email
 
 - foi configurado para recebimento das vendas do dia todos os dias à meia-noite
+- deve haver vendas fechadas no dia para o email ser recebido
 
-#### receber email imediatamente para fins de teste
+#### receber email imediatamente
 
-- entre no container da aplicação:
-
-```
-docker exec -it seller_tray_app bash
-```
-
-- execute o comando para enviar as vendas para a fila:
+- execute o seguinte comando:
 
 ```
-php artisan sales:publish
+docker exec -it seller_tray_app bash -c "php artisan sales:publish"
 ```
 
 - voce deve receber o email imediatamente
 
-#### alterar o horario de recebimento de email
-
-- se quiser adicionar mais um horário para recebimento de email
+#### alterar o horario de recebimento de email (a cada 10 segundos)
 
 - entre no seguinte arquivo e siga as instruções contidas nele, descomentando uma linha especifica:
 
@@ -188,11 +181,7 @@ routes/console.php
 - reinicie o container:
 
 ```
-docker-compose down
-```
-
-```
-docker-compose up -d
+docker-compose restart
 ```
 
 - voce deve receber o email em ate 30 segundos
@@ -222,7 +211,7 @@ http://localhost:15672/#/queues
 - usuario = user
 - senha = password
 
-### mysql
+#### banco de dados (mysql)
 
 - usuario = root
 - senha = root
