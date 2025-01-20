@@ -40,22 +40,34 @@ Ao final de cada dia é enviado um email com um relatório com a soma de todas a
 
 ### Instalação
 
+#### instale a aplicação
+
+```
+docker-compose up -d
+```
+
 #### entre na aplicação laravel
 
 ```
 docker exec -it seller_tray_app bash
 ```
 
-#### crie a chave da aplicação
-
-```
-php artisan key:generate
-```
-
 #### instale as dependencias necessarias
 
 ```
 composer install
+```
+
+#### crie o arquivo de configuração
+
+```
+cp .env.example .env
+```
+
+#### crie a chave da aplicação
+
+```
+php artisan key:generate
 ```
 
 #### crie as tabelas do banco de dados
@@ -81,6 +93,14 @@ exit
 ```
 docker-compose restart
 ```
+
+#### adicione permissão
+
+```
+sudo chmod 777 -R storage bootstrap
+```
+
+#### aguarde ate 30 segundos enquanto a aplicação inicia
 
 ### Documentação da api
 
