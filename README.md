@@ -186,17 +186,36 @@ docker-compose restart
 
 - voce deve receber o email em ate 30 segundos
 
-### Acesso
+### Observabilidade (sentry)
 
-#### url da aplicação de microserviços
+#### crie uma conta ou faça login da url da sentry
 
-http://localhost:8000/
+https://sentry.io/welcome/
 
-#### servidor de recebimento de email (relatorio de vendas)
+#### altere a chave de autenticação no sentry
 
-http://localhost:8026/
+- no .env insira sua chave do sentry
 
-#### log de todas as vendas no elasticsearch
+```
+SENTRY_LARAVEL_DSN=<sua_chave>
+```
+
+#### acesse o painel do sentry para monitorar os erros
+
+https://sentry.io/welcome/
+
+### Fila (RabitMQ)
+
+#### url
+
+http://localhost:15672/#/queues
+
+- usuario = user
+- senha = password
+
+### Logs
+
+#### log de todas as vendas (elasticsearch)
 
 http://localhost:8000/api/sales-elastic
 
@@ -204,14 +223,15 @@ http://localhost:8000/api/sales-elastic
 
 http://localhost:5603/app/management/data/index_management/indices
 
-#### url RabitMQ (filas)
+### Servidor de Email
 
-http://localhost:15672/#/queues
+#### servidor de recebimento de email (relatorio de vendas)
 
-- usuario = user
-- senha = password
+http://localhost:8026/
 
-#### banco de dados (mysql)
+### Banco de dados (mysql)
+
+#### acesso
 
 - usuario = root
 - senha = root
