@@ -55,12 +55,12 @@ http://localhost:8000/docs/api
 
 #### crie um usuário pela api
 
-```
-POST
-```
+metodo: POST
+url:
 ```
 http://localhost:8000/api/register
 ```
+body:
 ```
 {
     "name": "John Doe",
@@ -69,23 +69,21 @@ http://localhost:8000/api/register
     "password_confirmation": "password"
 }
 ```
-```
+
 a conta do usuário sera criada
 e um token de acesso sera gerado
-```
 
 #### utilize o token para as proximas etapas
 
 #### crie um vendedor
 
-```
-use o token no BeaterToken do authorization
-
-POST
-```
+metodo: POST
+authorization: BearerToken (use o token gerado)
+url:
 ```
 http://localhost:8000/api/sellers
 ```
+body:
 ```
 {
     "name": "fabio",
@@ -95,14 +93,13 @@ http://localhost:8000/api/sellers
 
 #### crie uma venda
 
-```
-use o token no BeaterToken do authorization
-
-POST
-```
+metodo: POST
+authorization: BearerToken (use o token gerado)
+url:
 ```
 http://localhost:8000/api/sales
 ```
+body:
 ```
 {
     "seller_id": 1,
@@ -112,43 +109,40 @@ http://localhost:8000/api/sales
 
 #### listar os vendedores
 
-```
-use o token no BeaterToken do authorization
-
-GET
-```
+metodo: GET
+authorization: BearerToken (use o token gerado)
+url:
 ```
 http://localhost:8000/api/sellers
 ```
 
 #### listar as vendas de um vendedor
 
-```
-use o token no BeaterToken do authorization
+metodo: GET
+authorization: BearerToken (use o token gerado)
+url: http://localhost:8000/api/sales/ID_DO_VENDEDOR
 
-GET
+url exemplo:
 ```
 http://localhost:8000/api/sales/1
 ```
 
 #### se o token expirar, logar novamente
 
-```
-use o token no BeaterToken do authorization
+um novo token sera gerado para usar novamente
 
-POST
-```
+metodo: POST
+authorization: BearerToken (use o token gerado)
+url:
 ```
 http://localhost:8000/api/login
 ```
+body:
 ```
 {
     "name": "fabio",
     "email": "fabio@test.com"
 }
-```
-```
-um novo token sera gerado
 ```
 
 ### Relatório de vendas
