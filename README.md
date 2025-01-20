@@ -165,7 +165,6 @@ http://localhost:8000/api/sales/1
 um novo token sera gerado para usar novamente
 
 metodo: POST
-authorization: BearerToken (use o token gerado)
 url:
 ```
 http://localhost:8000/api/login
@@ -221,7 +220,7 @@ docker-compose restart
 
 - voce deve receber o email em ate 30 segundos
 
-### Observabilidade (sentry)
+### Observabilidade - monitorar erros (sentry)
 
 #### opção 1 = acesse a seguinte conta sentry pre-configurada
 
@@ -265,10 +264,6 @@ docker-compose restart
 ```
 
 - acesse a aba de erros no painel da sentry (issues)
-
-https://sentry.io/welcome/
-
-#### acesse o painel do sentry para monitorar os erros
 
 https://sentry.io/welcome/
 
