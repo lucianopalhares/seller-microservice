@@ -23,6 +23,7 @@ Ao final de cada dia é enviado um email com um relatório com a soma de todas a
 * cache com Redis
 * banco de dados Mysql
 * logs com Elasticsearch e Kibana
+* documentação da api
 
 ### Como funciona:
 
@@ -69,11 +70,23 @@ php artisan migrate
 php artisan elasticsearch:create-index
 ```
 
-### documentação da api de microserviços
+#### saia do container
+
+```
+exit
+```
+
+#### reinicie a aplicação
+
+```
+docker-compose restart
+```
+
+### Documentação da api
 
 http://localhost:8000/docs/api
 
-### Como usar
+### Exemplo de Uso
 
 #### crie um usuário pela api
 
@@ -210,7 +223,7 @@ docker-compose restart
 
 ### Observabilidade (sentry)
 
-#### opção 1 = acesse a consta sentry pre-configurada
+#### opção 1 = acesse a seguinte conta sentry pre-configurada
 
 - acesse o site da sentry:
 
@@ -251,9 +264,9 @@ SENTRY_LARAVEL_DSN=<sua_chave>
 docker-compose restart
 ```
 
-- acesse a seguinte url da sentry para acompanhar os erros:
+- acesse a aba de erros no painel da sentry (issues)
 
-https://test-dby.sentry.io/issues/?referrer=sidebar
+https://sentry.io/welcome/
 
 #### acesse o painel do sentry para monitorar os erros
 
@@ -270,7 +283,7 @@ http://localhost:15672/#/queues
 
 ### Logs
 
-#### log de todas as vendas (elasticsearch)
+#### buscar todas vendas registradas (elasticsearch)
 
 http://localhost:8000/api/sales-elastic
 
