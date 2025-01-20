@@ -89,8 +89,7 @@ class SaleEloquentRepository implements SaleRepository
         $startOfDay = \Carbon\Carbon::today();
         $endOfDay = \Carbon\Carbon::now();
 
-        return SaleEloquentModel::where('enqueued', false)
-            ->whereBetween('created_at', [$startOfDay, $endOfDay])
+        return SaleEloquentModel::whereBetween('created_at', [$startOfDay, $endOfDay])
             ->get()->map(function ($sale) {
                 $eloquentSeller = $sale->seller;
 
