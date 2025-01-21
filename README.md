@@ -17,10 +17,10 @@ Ao final de cada dia é enviado um email com um relatório com a soma de todas a
 
 ### Tecnologias usadas:
 
-* Framework Laravel versao 11 (php 8.4) 
+* Framework Laravel 11 (php 8.4) 
 * API de Microserviço com as melhores práticas de design patterns
 * Autenticação JWT
-* Fila com RabitMQ
+* Fila com RabitMQ (para envio de emails das vendas)
 * Observabilidade com Sentry (monitoramento de erros)
 * Cache com Redis (busca de vendas)
 * Banco de dados Mysql
