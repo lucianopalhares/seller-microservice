@@ -17,13 +17,15 @@ Ao final de cada dia é enviado um email com um relatório com a soma de todas a
 
 ### Tecnologias usadas:
 
-* microserviço com as melhores práticas de design patterns
-* fila com RabitMQ
-* observabilidade com Sentry
-* cache com Redis
-* banco de dados Mysql
-* logs com Elasticsearch e Kibana
-* documentação da api
+* Framework Laravel versao 11 (php 8.4) 
+* API de Microserviço com as melhores práticas de design patterns
+* Autenticação JWT
+* Fila com RabitMQ
+* Observabilidade com Sentry (monitoramento de erros)
+* Cache com Redis (busca de vendas)
+* Banco de dados Mysql
+* Logs com Elasticsearch e Kibana (de todas as vendas criadas)
+* Documentação da API
 
 ### Como funciona:
 
