@@ -324,6 +324,12 @@ http://localhost:8026/
 - porta = 3337
 - banco = seller-tray
 
+### FRONT para consumir a api
+
+#### siga as instrucoes do seguinte repositorio do front, para consumir a api
+
+https://github.com/lucianopalhares/seller-nuxt
+
 ### License
 
 Open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

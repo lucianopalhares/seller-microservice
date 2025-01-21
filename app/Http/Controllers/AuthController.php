@@ -64,7 +64,7 @@ class AuthController extends Controller
         if (Auth::attempt($credentials)) {
             $user = Auth::user();
             $token = JWTAuth::claims(['role' => $user->role])->fromUser($user);
-            return response()->json(['token' => $token]);
+            return response()->json(['token' => $token, 'user' => \Auth::user()]);
         }
 
         return response()->json(['message' => 'Não autorizado'], 401);
